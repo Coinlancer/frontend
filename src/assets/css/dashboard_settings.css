@@ -1,0 +1,40 @@
+.list-group.list-group--block {
+    padding: 30px;
+}
+
+.form-group-weight {
+    width: 320px;
+}
+
+.form-group-left {
+    float: left;
+    margin-right: 20px;
+}
+
+.setting-block-1 {
+    margin-bottom: 50px;
+}
+
+.setting-block-1 h2,.setting-block-2 h2 {
+    margin-bottom: 35px;
+}
+.setting-block-2 h4{
+    margin-bottom: 35px;
+}
+
+.setting-block-2 .save-changes {
+    margin-bottom: 35px;
+    color: #fff;
+    background-color: #01bf86;
+}
+
+.setting-block-2 .save-changes:hover, .setting-block-2 .save-changes:active, .setting-block-2 .save-changes:focus, .setting-block-2 .save-changes:visited {
+    color: #fff;
+    background-color: #039368;
+}
+
+.visibility-block label {
+    font-weight: 400;
+}
+
+

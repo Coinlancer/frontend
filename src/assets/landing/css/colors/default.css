@@ -1,0 +1,87 @@
+/* Theme Name: Zodkoo - Responsive Landing page template
+   Author: Coderthemes
+   Author e-mail: coderthemes@gmail.com
+   Version: 1.1.0
+   Created: May 2016
+   Last Update: Jun 2016
+   File Description:Color CSS file of the template
+*/
+
+
+.back-to-top:hover,.bg-custom,.btn-custom,.dropdown-menu>li>a:focus, .dropdown-menu>li>a:hover,
+.navbar-custom  {
+  /*background-color: rgba(1, 191, 134, 0) !important;*/
+}
+
+.btn-white-fill,.text-custom,.btn-white-bordered:hover,.btn-custom:hover,.features-box i,
+.pricing-column .plan-title {
+  color: #01bf86 !important;
+}
+
+.btn-custom {
+  border: 2px solid #01bf86 !important;
+  color: #01bf86 !important;
+}
+
+.intro-form input:focus {
+  border: 1px solid #01bf86;
+}
+
+
+
+
+
+
+
+
+.bg-custom {
+  background-image: url(https://images.pexels.com/photos/374016/pexels-photo-374016.jpeg?w=1260&h=750&auto=compress&cs=tinysrgb);
+  background-size: cover;
+  background-repeat: no-repeat;
+}
+
+.bg-interlayer {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.62);
+}
+
+.navbar-brand {
+  padding: 0;
+}
+
+.navbar-brand img {
+  width: 53px;
+}
+
+.job-box-icon {
+  font-size: 55px;
+}
+
+.job-box {
+  position: relative;
+}
+
+.job-box:hover {
+  cursor: pointer;
+}
+
+.job-box:hover::before {
+  content: " ";
+  position: absolute;
+  width: 100%;
+  height: 3px;
+  top: 0;
+  background: #01bf86;
+  left: 0;
+}
+
+.frontpage-skills li {
+  list-style: none;
+  padding-top: 6px;
+}
+
+.frontpage-skills li a {
+  color: #01bf86;
+}

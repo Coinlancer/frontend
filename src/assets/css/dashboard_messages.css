@@ -1,0 +1,115 @@
+.main__container:not(.main__container-sm) {
+    max-width: 100% !important;
+}
+
+.list-group.list-group--block.contact-lists {
+    padding: 35px;
+}
+
+.questions-answers__main.media {
+    padding: 15px 0;
+}
+
+.list-group__actions {
+    top: 0;
+    right: 5px;
+}
+
+.list-group__attrs>div {
+    margin: 0 2px 4px 0;
+}
+
+.questions-answers__main{
+    margin: 0;
+}
+
+.load-more {
+    margin: 10px 0;
+}
+.no-padding {
+    padding: 0;
+    background: none;
+}
+
+ul.ChatLog {
+    list-style: none;
+}
+
+.ChatLog {
+    max-width: 100%;
+    margin: 0 auto;
+}
+.ChatLog .ChatLog__entry {
+    margin: 10px 0;
+}
+
+.ChatLog__entry {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-end;
+    max-width: 100%;
+}
+
+.ChatLog__entry.ChatLog__entry_mine {
+    flex-direction: row-reverse;
+}
+
+.ChatLog__avatar {
+    flex-shrink: 0;
+    flex-grow: 0;
+    z-index: 1;
+    height: 50px;
+    width: 50px;
+    border-radius: 25px;
+
+}
+
+.ChatLog__entry.ChatLog__entry_mine
+.ChatLog__avatar {
+    display: none;
+}
+
+.ChatLog__entry .ChatLog__message {
+    position: relative;
+    margin: 0 12px;
+}
+
+.ChatLog__entry .ChatLog__message::before {
+    position: absolute;
+    right: auto;
+    bottom: .6em;
+    left: -12px;
+    height: 0;
+    content: '';
+    border: 6px solid transparent;
+    border-right-color: #ddd;
+    z-index: 2;
+}
+
+.ChatLog__entry.ChatLog__entry_mine .ChatLog__message::before {
+    right: -12px;
+    bottom: .6em;
+    left: auto;
+    border: 6px solid transparent;
+    border-left-color: #08f;
+}
+
+.ChatLog__message {
+    background-color: #ddd;
+    padding: 10px;
+    border-radius: 4px;
+    font-weight: lighter;
+    max-width: 70%;
+}
+
+.ChatLog__entry.ChatLog__entry_mine .ChatLog__message {
+    border-top: 1px solid #07f;
+    border-bottom: 1px solid #07f;
+    background-color: #08f;
+    color: #fff;
+}
+
+.ChatLog__message .ChatLog__timestamp {
+    display: none;
+}
+
