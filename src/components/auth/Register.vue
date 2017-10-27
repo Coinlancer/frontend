@@ -2,13 +2,17 @@
 
   import Api from '../../api/api';
 
-  import Headerblock from './partials/Header.vue'
-  import Footerblock from './partials/Footer.vue'
+  import Headerblock from '../partials/Header.vue'
 
   import keythereum from 'keythereum';
   import sjcl from 'sjcl';
 
   export default {
+    beforeCreate: function () {
+      if (!!this.$store.state.session.account.acc_id) {
+        this.$router.push('/projects');
+      }
+    },
     methods: {
       encryptKeypair: function (password) {
         var params = { keyBytes: 32, ivBytes: 16 };
@@ -57,13 +61,14 @@
         vm.$spinner.push();
         return Api.register(data)
             .then((response) => {
-              vm.$store.dispatch('setUserData', response.data.data.account);
+              vm.$store.dispatch('setAccountData', response.data.account);
+              localStorage.setItem('token', response.data.token);
               vm.$router.push('/verify')
               return vm.$helpers.successMsg('Verification code was sent on your email');
             })
             .catch((err) => {
               console.error(err);
-              //TODO: notification system
+              return vm.$helpers.errorMsg('This email/login is already used');
             })
             .then(() => {
               vm.$spinner.pop();
@@ -72,7 +77,6 @@
     },
     components: {
       Headerblock,
-      Footerblock
     }
   }
 </script>
@@ -162,15 +166,15 @@
 
                   <div>Sign in using</div>
 
-                  <a href="" class="mdc-bg-blue-500">
+                  <a href="#" class="mdc-bg-blue-500">
                     <i class="zmdi zmdi-facebook"></i>
                   </a>
 
-                  <a href="" class="mdc-bg-cyan-500">
+                  <a href="#" class="mdc-bg-cyan-500">
                     <i class="zmdi zmdi-twitter"></i>
                   </a>
 
-                  <a href="" class="mdc-bg-red-400">
+                  <a href="#" class="mdc-bg-red-400">
                     <i class="zmdi zmdi-google"></i>
                   </a>
                 </div>
@@ -182,10 +186,9 @@
       </div>
     </section>
 
-    <footerblock></footerblock>
   </div>
 </template>
 
 <style>
-  @import '../../assets/css/register.css';
+  @import 'auth.css';
 </style>

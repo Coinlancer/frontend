@@ -3,26 +3,26 @@ import * as types from '../mutation-types'
 
 // initial state
 const state = {
-  user: {},
+  account: {},
   server_time: Math.round(Date.now() / 1000)
 }
 
 // getters
 const getters = {
-  userData: state => state.user
+  accountData: state => state.account
 }
 
 // actions
 const actions = {
-  setUserData ({ commit }, userdata) {
-    commit(types.SET_USER_DATA, { userdata });
+  setAccountData ({ commit }, account_data) {
+    commit(types.SET_ACCOUNT_DATA, { account_data });
   }
 }
 
 // mutations
 const mutations = {
-  [types.SET_USER_DATA] (state, { userdata }) {
-    state.user = userdata
+  [types.SET_ACCOUNT_DATA] (state, { account_data }) {
+    state.account = account_data
   }
 }
 

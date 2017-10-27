@@ -2,10 +2,14 @@
 
   import Api from '../../api/api'
 
-  import Headerblock from './partials/Header.vue'
-  import Footerblock from './partials/Footer.vue'
+  import Headerblock from '../partials/Header.vue'
 
   export default {
+    beforeCreate: function () {
+      if (!!this.$store.state.session.account.acc_id) {
+        this.$router.push('/projects');
+      }
+    },
     methods: {
       login: function (e) {
         let vm = this;
@@ -28,9 +32,11 @@
         vm.$spinner.push();
         return Api.login(data)
             .then((response) => {
-              vm.$store.dispatch('setUserData', response.data.data.account);
-              if (response.data.data.account.acc_is_verified) {
-                vm.$router.push('/dashboard/projects');
+              vm.$store.dispatch('setAccountData', response.data.account);
+              localStorage.setItem('token', response.data.token);
+
+              if (response.data.account.acc_is_verified) {
+                vm.$router.push('/dashboard/settings');
               } else {
                 vm.$router.push('/verify');
               }
@@ -46,7 +52,6 @@
     },
     components: {
       Headerblock,
-      Footerblock
     }
   }
 </script>
@@ -78,9 +83,7 @@
                 <button class="btn btn-primary btn-block m-t-10 m-b-10">Login</button>
 
                 <div class="text-center">
-                  <a href="#top-nav-forgot-password" data-toggle="tab">
-                    <small>Forgot email/password?</small>
-                  </a>
+                  <router-link to="/register"><small>Sign up now</small></router-link>
                 </div>
 
                 <div class="top-nav__auth">
@@ -88,15 +91,15 @@
 
                   <div>Sign in using</div>
 
-                  <a href="" class="mdc-bg-blue-500">
+                  <a href="#" class="mdc-bg-blue-500">
                     <i class="zmdi zmdi-facebook"></i>
                   </a>
 
-                  <a href="" class="mdc-bg-cyan-500">
+                  <a href="#" class="mdc-bg-cyan-500">
                     <i class="zmdi zmdi-twitter"></i>
                   </a>
 
-                  <a href="" class="mdc-bg-red-400">
+                  <a href="#" class="mdc-bg-red-400">
                     <i class="zmdi zmdi-google"></i>
                   </a>
                 </div>
@@ -106,7 +109,5 @@
         </div>
       </div>
     </section>
-
-    <footerblock></footerblock>
   </div>
 </template>

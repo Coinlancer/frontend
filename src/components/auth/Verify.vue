@@ -2,8 +2,7 @@
 
   import Api from '../../api/api'
 
-  import Headerblock from './partials/Header.vue'
-  import Footerblock from './partials/Footer.vue'
+  import Headerblock from '../partials/Header.vue'
 
   export default {
     methods: {
@@ -21,7 +20,7 @@
         vm.$spinner.push();
         return Api.verifyAccount(data)
             .then((response) => {
-              vm.$router.push('/dashboard/projects');
+              vm.$router.push('/dashboard/settings');
               return vm.$helpers.successMsg('Account confirmed');
             })
             .catch((err) => {
@@ -35,7 +34,6 @@
     },
     components: {
       Headerblock,
-      Footerblock
     }
   }
 </script>
@@ -67,10 +65,9 @@
       </div>
     </section>
 
-    <footerblock></footerblock>
   </div>
 </template>
 
 <style>
-  @import '../../assets/css/register.css';
+  @import 'auth.css';
 </style>

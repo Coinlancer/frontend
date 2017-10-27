@@ -1,49 +1,41 @@
-var webpack = require('webpack')
+const webpack = require('webpack');
+const path = require('path');
 
 module.exports = {
-  entry: [
-    './src/main.js'
-  ],
-  output: {
-    path: "/dist/js",
-    publicPath: "/dist/",
-    filename: "app.js"
-  },
-  watch: true,
-  module: {
-    loaders: [
-      {
-        test: /\.js$/,
-        // excluding some local linked packages.
-        // for normal use cases only node_modules is needed.
-        exclude: /node_modules|vue\/src|vue-router\//,
-        loader: 'babel'
-      },
-      {
-        test: /\.scss$/,
-        loaders: ['style', 'css', 'sass']
-      },
-      {
-        test: /\.vue$/,
-        loader: 'vue'
-      },
-      {
-        test: /\.json$/,
-        loader: 'json-loader'
-      }
-    ]
-  },
-  babel: {
-    presets: ['es2015'],
-    plugins: ['transform-runtime']
-  },
-  resolve: {
-    modulesDirectories: ['node_modules'],
-    alias: {
-      'vue$': 'vue/dist/vue.common.js'
+    entry: './src/main.js',
+    output: {
+        path: path.resolve(__dirname, 'dist/js'),
+        filename: 'app.js'
+    },
+    watch: true,
+    module: {
+        rules: [{
+            test: /\.js$/,
+            exclude: /(node_modules|bower_components)/,
+            use: {
+                loader: 'babel-loader',
+                options: {
+                    presets: ['env']
+                }
+            }
+        }, {
+            test: /\.vue$/,
+            use: {
+                loader: 'vue-loader',
+                options: {}
+            }
+        }]
+    },
+    resolve: {
+        modules: ['node_modules'],
+    },
+    devServer: {
+        contentBase: path.join(__dirname, "dist"),
+        compress: false,
+        port: 9000,
+        historyApiFallback: true
+    },
+    node: {
+        fs: "empty"
     }
-  },
-  node: {
-    fs: "empty"
-  }
 }

@@ -1,3 +1,3 @@
 module.exports = {
-    API_HOST: 'http://185.156.41.22:8099'
+    API_HOST: 'http://192.168.1.127:8099'
 };

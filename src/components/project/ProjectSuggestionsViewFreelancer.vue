@@ -14,14 +14,14 @@
       return {
         account: vm.$store.getters.accountData,
         project: null,
+        suggestion: null,
         attachments: null,
         freelancers: null,
-        suggestion: null,
         skills: null,
         steps: null,
         sug_isLoading: false,
-        category: null,
-        subcategory: null,
+        categories: null,
+        subcategories: null,
         is_owner: false
       }
     },
@@ -47,20 +47,21 @@
             .then((resp) => {
               console.log(resp);
               vm.suggestion = true; //todo: load sugestion data
+              //vm.$helpers.successMsg('Suggestion was sent');
             })
             .catch((err) => {
               console.error(err);
               vm.$helpers.errorMsg('Can not send suggestion');
             })
             .then(() => {
-                vm.sug_isLoading = false;
+              vm.sug_isLoading = false;
             })
       }
     },
     beforeCreate: function () {
       let vm = this;
-
       vm.$spinner.push();
+
       return api.getProjectData(vm.$route.params.id)
           .then(resp => {
             vm.project = resp.data.project;
@@ -72,6 +73,7 @@
 
             vm.skills = resp.data.skills || [];
             vm.attachments = resp.data.attachments || [];
+            vm.freelancers = resp.data.freelancers || [];
             vm.suggestion = resp.data.suggestion || null;
             vm.subcategory = resp.data.subcategory || null;
             vm.category = resp.data.category || null;
@@ -185,84 +187,40 @@
               <div class="tab-nav tab-nav--justified" data-rmd-breakpoint="500">
                 <div class="tab-nav__inner">
                   <ul>
-                    <li class="active"><a href="#">Task description</a></li>
-                    <li><router-link :to="'/project/' + project.prj_id + '/suggestions/'">Suggestions</router-link></li>
+                    <li><router-link :to="'/project/' + project.prj_id">Task description</router-link></li>
+                    <li class="active"><a href="#">Suggestions</a></li>
                   </ul>
                 </div>
               </div>
 
-              <div class="card__body">
-                <div class="card__sub row rmd-stats">
-                  <div class="col-xs-4">
-                    <div class="rmd-stats__item mdc-bg-teal-400">
-                      <h2 class="capitalize">{{$humanize.naturalDay(project.prj_created_at, 'F, d')}}</h2>
-                      <small>Started</small>
+              <div v-if="freelancers && freelancers.length" class="listings-list listings-list--alt">
+                <div v-for="freelancer in freelancers" class="listings-grid__item">
+                  <a href="#" class="media">
+                    <a class="list-group-item media" href="#">
+                      <div class="pull-left">
+                        <img src="/assets/img/default_user.png" alt="" class="list-group__img img-circle" width="65" height="65">
+                      </div>
+                      <div class="media-body list-group__text">
+                        <strong>{{freelancer.acc_name}} {{freelancer.acc_surname}}</strong>
+                        <small class="list-group__text">+1-202-555-0121</small>
+                        <div class="rmd-rate jq-ry-container" data-rate-value="5" data-rate-readonly="true" readonly="readonly" style="width: 90px;"><div class="jq-ry-group-wrapper"><div class="jq-ry-normal-group jq-ry-group"><!--?xml version="1.0" encoding="utf-8"?--><svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 12.705 512 486.59" x="0px" y="0px" xml:space="preserve" width="18px" height="18px" fill="#eee"><polygon points="256.814,12.705 317.205,198.566 512.631,198.566 354.529,313.435 414.918,499.295 256.814,384.427 98.713,499.295 159.102,313.435 1,198.566 196.426,198.566 "></polygon></svg><!--?xml version="1.0" encoding="utf-8"?--><svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 12.705 512 486.59" x="0px" y="0px" xml:space="preserve" width="18px" height="18px" fill="#eee" style="margin-left: 0px;"><polygon points="256.814,12.705 317.205,198.566 512.631,198.566 354.529,313.435 414.918,499.295 256.814,384.427 98.713,499.295 159.102,313.435 1,198.566 196.426,198.566 "></polygon></svg><!--?xml version="1.0" encoding="utf-8"?--><svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 12.705 512 486.59" x="0px" y="0px" xml:space="preserve" width="18px" height="18px" fill="#eee" style="margin-left: 0px;"><polygon points="256.814,12.705 317.205,198.566 512.631,198.566 354.529,313.435 414.918,499.295 256.814,384.427 98.713,499.295 159.102,313.435 1,198.566 196.426,198.566 "></polygon></svg><!--?xml version="1.0" encoding="utf-8"?--><svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 12.705 512 486.59" x="0px" y="0px" xml:space="preserve" width="18px" height="18px" fill="#eee" style="margin-left: 0px;"><polygon points="256.814,12.705 317.205,198.566 512.631,198.566 354.529,313.435 414.918,499.295 256.814,384.427 98.713,499.295 159.102,313.435 1,198.566 196.426,198.566 "></polygon></svg><!--?xml version="1.0" encoding="utf-8"?--><svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 12.705 512 486.59" x="0px" y="0px" xml:space="preserve" width="18px" height="18px" fill="#eee" style="margin-left: 0px;"><polygon points="256.814,12.705 317.205,198.566 512.631,198.566 354.529,313.435 414.918,499.295 256.814,384.427 98.713,499.295 159.102,313.435 1,198.566 196.426,198.566 "></polygon></svg></div><div class="jq-ry-rated-group jq-ry-group" style="width: 100%;"><!--?xml version="1.0" encoding="utf-8"?--><svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 12.705 512 486.59" x="0px" y="0px" xml:space="preserve" width="18px" height="18px" fill="#fcd461"><polygon points="256.814,12.705 317.205,198.566 512.631,198.566 354.529,313.435 414.918,499.295 256.814,384.427 98.713,499.295 159.102,313.435 1,198.566 196.426,198.566 "></polygon></svg><!--?xml version="1.0" encoding="utf-8"?--><svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 12.705 512 486.59" x="0px" y="0px" xml:space="preserve" width="18px" height="18px" fill="#fcd461" style="margin-left: 0px;"><polygon points="256.814,12.705 317.205,198.566 512.631,198.566 354.529,313.435 414.918,499.295 256.814,384.427 98.713,499.295 159.102,313.435 1,198.566 196.426,198.566 "></polygon></svg><!--?xml version="1.0" encoding="utf-8"?--><svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 12.705 512 486.59" x="0px" y="0px" xml:space="preserve" width="18px" height="18px" fill="#fcd461" style="margin-left: 0px;"><polygon points="256.814,12.705 317.205,198.566 512.631,198.566 354.529,313.435 414.918,499.295 256.814,384.427 98.713,499.295 159.102,313.435 1,198.566 196.426,198.566 "></polygon></svg><!--?xml version="1.0" encoding="utf-8"?--><svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 12.705 512 486.59" x="0px" y="0px" xml:space="preserve" width="18px" height="18px" fill="#fcd461" style="margin-left: 0px;"><polygon points="256.814,12.705 317.205,198.566 512.631,198.566 354.529,313.435 414.918,499.295 256.814,384.427 98.713,499.295 159.102,313.435 1,198.566 196.426,198.566 "></polygon></svg><!--?xml version="1.0" encoding="utf-8"?--><svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 12.705 512 486.59" x="0px" y="0px" xml:space="preserve" width="18px" height="18px" fill="#fcd461" style="margin-left: 0px;"><polygon points="256.814,12.705 317.205,198.566 512.631,198.566 354.529,313.435 414.918,499.295 256.814,384.427 98.713,499.295 159.102,313.435 1,198.566 196.426,198.566 "></polygon></svg></div></div></div>
+                      </div>
+                    </a>
+
+                    <div class="media-body">
+                      <div class="listings-grid__body">
+                        <small>{{freelancer.prf_hours}} hours | {{freelancer.prf_price}} CLN</small>
+                        <h5>{{freelancer.prf_message}}</h5>
+                      </div>
                     </div>
-                  </div>
-                  <div class="col-xs-4">
-                    <div class="rmd-stats__item mdc-bg-purple-400">
-                      <h2 class="capitalize">{{$humanize.naturalDay(project.prj_deadline, 'F, d')}}</h2>
-                      <small>Finish</small>
-                    </div>
-                  </div>
-                  <div class="col-xs-4">
-                    <div class="rmd-stats__item mdc-bg-red-400">
-                      <h2>{{project.prj_budget}} CLN</h2>
-                      <small>Price</small>
-                    </div>
-                  </div>
+                  </a>
                 </div>
-
-                <div class="card__sub">
-                  <h4>{{project.prj_title}}</h4>
-
-                  {{project.prj_description}}
-                </div>
-
-                <div v-if="skills && skills.length" class="card__sub">
-                  <h4>Specialties</h4>
-                  <p>{{ skills.map((skill) => { return skill.skl_title } ).join(', ')}}</p>
-                </div>
-
-                <div v-if="steps && steps.length" class="card__sub">
-                  <h4>Steps of project</h4>
-                  <div class="card-steps">
-                    <ul>
-                      <li v-for="step in steps">
-                        <div class="list-group list-group--block tasks-lists">
-                          <div v-if="step.step_is_completed" class="checked-icon" title="Ldfnnfffnf">
-                            <img src="/assets/img/icons/checked.png" alt="">
-                          </div>
-                          <div class="list-group-item">
-                            <div class="checkbox checkbox--char">
-                              <label>
-                                <input type="checkbox">
-                                <span class="checkbox__helper"></span>
-                                <span class="tasks-list__info">
-                                    {{step.stp_title}}
-                                    <span class="price-project">{{step.stp_budget}} CLN</span>
-                                </span>
-                              </label>
-                            </div>
-                          </div>
-                        </div>
-                      </li>
-                    </ul>
-                  </div>
-                </div>
-
-                <!--<div class="card__sub">-->
-                <!--<h4>Contact Information</h4>-->
-
-                <!--<ul class="rmd-contact-list">-->
-                <!--<li><i class="zmdi zmdi-phone"></i>308-360-8938</li>-->
-                <!--<li><i class="zmdi zmdi-email"></i>robertbosborne@inbound.plus</li>-->
-                <!--<li><i class="zmdi zmdi-facebook"></i>robertbosborne</li>-->
-                <!--<li><i class="zmdi zmdi-twitter"></i>@robertbosborne</li>-->
-                <!--<li><i class="zmdi zmdi-pin"></i>5470 Madison Street Severna Park, MD 21146</li>-->
-                <!--</ul>-->
-                <!--</div>-->
               </div>
+
+              <div v-else class="listings-list listings-list--alt">
+                <h2 style="text-align: center;">No suggestions yet</h2>
+              </div>
+
             </div>
           </div>
 

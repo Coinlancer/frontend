@@ -2,7 +2,6 @@
   import api from '../../api/api'
   import { mapGetters } from 'vuex'
   import Headerblock from '../partials/Header.vue'
-  import Footerblock from '../partials/Footer.vue'
 
   //libraries
   import keythereum from 'keythereum';
@@ -12,37 +11,73 @@
     data: function () {
       let vm = this;
 
-      let userData = vm.$store.getters.userData;
+      let accountData = vm.$store.getters.accountData;
 
       return {
-        userData: userData,
+        accountData: accountData,
         project: null,
-        client: userData,
+        attachments: null,
+        freelancers: null,
+        skills: null,
+        steps: null,
+        client: accountData,
+        category: null,
+        subcategory: null,
         is_owner: false
       }
     },
     computed: mapGetters({
       categories: 'allCategories',
-      skills: 'allSkills'
     }),
     methods: {
-      getCategoryNameById: function (id) {
+      deleteStep: function (step_id, event) {
         let vm = this;
-        let category = vm.categories.filter((category) => {
-          return category.cat_id == id
-        });
-        if (category.length) {
-          return category[0].cat_title;
+        let dialog_context = null;
+        if (event) event.preventDefault()
+
+        if (!step_id) {
+          return false;
         }
+
+        vm.$dialog.confirm("Confirm step deleting")
+            .then((dialog) => {
+              dialog_context = dialog;
+              return api.deleteStep(step_id);
+            })
+            .then(() => {
+              return api.getProjectSteps(vm.$route.params.id);
+            })
+            .then((steps) => {
+              vm.steps = steps;
+              return vm.$helpers.successMsg('Step deleted');
+            })
+            .catch((err) => {
+              console.error(err);
+              return vm.$helpers.errorMsg('Step deleting aborted');
+            })
+            .then(() => {
+              dialog_context.close();
+            });
       }
     },
     beforeCreate: function () {
       let vm = this;
 
-      return api.getProjectData(vm.$route.params.id || null)
+      return api.getProjectData(vm.$route.params.id)
           .then(resp => {
-            vm.project = resp.data.data;
-            vm.is_owner = (vm.$store.getters.userData.acc_id === vm.project.acc_id);
+            vm.project = resp.data.project;
+
+            //temporary fix
+            vm.project.prj_created_at = Date.parse(vm.project.prj_created_at.replace('-','/','g')) / 1000
+            vm.project.prj_deadline = Date.parse(vm.project.prj_deadline.replace('-','/','g')) / 1000
+            //todo get timestamp from db
+
+            vm.skills = resp.data.skills || [];
+            vm.attachments = resp.data.attachments || [];
+            vm.subcategory = resp.data.subcategory || null;
+            vm.category = resp.data.category || null;
+            vm.steps = resp.data.steps || [];
+            vm.is_owner = (vm.$store.getters.accountData.acc_id === vm.project.acc_id);
           })
           .catch((err) => {
             console.error(err);
@@ -50,7 +85,7 @@
           })
     },
     created () {
-      this.$store.dispatch('getAllCategories');
+      this.$store.dispatch('getCategories');
       this.$store.dispatch('getAllSkills');
 
 //      //init all jquery operations
@@ -83,7 +118,6 @@
     },
     components: {
       Headerblock,
-      Footerblock
     }
   }
 </script>
@@ -95,12 +129,8 @@
     <section v-if="project && client" class="section">
       <div class="container">
         <header class="section__title text-left clearfix">
-          <h2>{{project.project.prj_title}}</h2>
-          <small>
-            <!--<span v-for="category_id in project.prj_category_ids">-->
-              <!--{{getCategoryNameById(category_id)}}&nbsp;-->
-            <!--</span>-->
-          </small>
+          <h2>{{project.prj_title}}</h2>
+          <small>{{category.cat_title}} - {{subcategory.sct_title}}</small>
           <!--<div class="actions actions&#45;&#45;section">-->
           <!--<div class="actions__toggle">-->
           <!--<input type="checkbox">-->
@@ -122,20 +152,29 @@
           <div class="col-md-12">
             <div class="card profile">
               <div class="profile__img">
-                <img src="http://www.iconsfind.com/wp-content/uploads/2016/10/20161014_58006be216aa3.png" alt="">
+                <img src="/assets/img/default_user.png" alt="">
               </div>
-
+              <!--<div class="profile__info">-->
+                <!--<div class="profile__review">-->
+                  <!--<span class="rmd-rate" :data-rate-value="client.rating" data-rate-readonly="true"></span>-->
+                  <!--<span>({{client.review_count}} Review)</span>-->
+                <!--</div>-->
+                <!--<ul class="rmd-contact-list">-->
+                  <!--<li v-if="client.contacts && client.contacts.skype"><i class="zmdi zmdi-skype"></i>{{client.contacts.skype}}</li>-->
+                  <!--<li v-if="client.contacts && client.contacts.phone"><i class="zmdi zmdi-phone"></i>{{client.contacts.phone}}</li>-->
+                  <!--<li v-if="client.contacts && client.contacts.email"><i class="zmdi zmdi-email"></i>{{client.contacts.email}}</li>-->
+                <!--</ul>-->
+              <!--</div>-->
               <div class="profile__info">
-
+                <strong><a href="#">{{project.acc_name}} {{project.acc_surname}}</a></strong>
                 <div class="profile__review">
-                  <span class="rmd-rate" :data-rate-value="client.rating" data-rate-readonly="true"></span>
-                  <span>({{client.review_count}} Review)</span>
+                  <span class="rmd-rate" data-rate-value="3" data-rate-readonly="true"></span>
+                  <span>(263 Review)</span>
                 </div>
-
                 <ul class="rmd-contact-list">
-                  <li v-if="client.contacts && client.contacts.skype"><i class="zmdi zmdi-skype"></i>{{client.contacts.skype}}</li>
-                  <li v-if="client.contacts && client.contacts.phone"><i class="zmdi zmdi-phone"></i>{{client.contacts.phone}}</li>
-                  <li v-if="client.contacts && client.contacts.email"><i class="zmdi zmdi-email"></i>{{client.contacts.email}}</li>
+                  <li><i class="zmdi zmdi-skype"></i>Skeper_200</li>
+                  <li><i class="zmdi zmdi-phone"></i>308-360-8938</li>
+                  <li><i class="zmdi zmdi-email"></i>malinda@inbound.plus</li>
                 </ul>
               </div>
             </div>
@@ -144,9 +183,8 @@
               <div class="tab-nav tab-nav--justified" data-rmd-breakpoint="500">
                 <div class="tab-nav__inner">
                   <ul>
-                    <li class="active"><a href="contract-c.html">Task description</a></li>
-                    <li><a href="contract-suggestions-c.html">Suggestions</a></li>
-                    <!--<li><a href="agent-detail-reviews.html">Reviews</a></li>-->
+                    <li class="active"><a href="#">Task description</a></li>
+                    <li><router-link :to="'/project/' + project.prj_id + '/suggestions/'">Suggestions</router-link></li>
                   </ul>
                 </div>
               </div>
@@ -155,13 +193,13 @@
                 <div class="card__sub row rmd-stats">
                   <div class="col-xs-4">
                     <div class="rmd-stats__item mdc-bg-teal-400">
-                      <h2 class="capitalize">{{$humanize.naturalDay(project.prj_start_at)}}</h2>
+                      <h2 class="capitalize">{{$humanize.naturalDay(project.prj_created_at, 'F, d')}}</h2>
                       <small>Started</small>
                     </div>
                   </div>
                   <div class="col-xs-4">
                     <div class="rmd-stats__item mdc-bg-purple-400">
-                      <h2 class="capitalize">{{$humanize.naturalDay(project.prj_end_at, 'F, d')}}</h2>
+                      <h2 class="capitalize">{{$humanize.naturalDay(project.prj_deadline, 'F, d')}}</h2>
                       <small>Finish</small>
                     </div>
                   </div>
@@ -179,38 +217,41 @@
                   {{project.prj_description}}
                 </div>
 
-                <div v-if="project.prj_skill_ids.length" class="card__sub">
+                <div v-if="skills && skills.length" class="card__sub">
                   <h4>Specialties</h4>
-                  <p>{{ project.prj_skill_ids.map((skill_id) => { return getSkillNameById(skill_id) } ).join(', ')}}</p>
+                  <p>{{ skills.map((skill) => { return skill.skl_title } ).join(', ')}}</p>
                 </div>
 
-                <div v-if="project.prj_steps.length" class="card__sub">
+                <div v-if="steps && steps.length" class="card__sub">
                   <h4>Steps of project</h4>
                   <div class="card-steps">
                     <ul>
-                      <li v-for="step in project.prj_steps">
+                      <li v-for="step in steps">
                         <div class="list-group list-group--block tasks-lists">
+                          <div v-if="step.step_is_completed" class="checked-icon" title="Ldfnnfffnf">
+                            <img src="/assets/img/icons/checked.png" alt="">
+                          </div>
                           <div class="list-group-item">
                             <div class="checkbox checkbox--char">
                               <label>
                                 <input type="checkbox">
                                 <span class="checkbox__helper"></span>
                                 <span class="tasks-list__info">
-                                    {{step.title}}
-                                    <span class="price-project">{{step.budget}} CLN</span>
+                                    {{step.stp_title}}
+                                    <span class="price-project">{{step.stp_budget}} CLN</span>
                                 </span>
                               </label>
                             </div>
 
                             <div v-if="is_owner" class="actions list-group__actions">
                               <div class="dropdown">
-                                <a href="" data-toggle="dropdown"><i
+                                <a href="#" data-toggle="dropdown"><i
                                     class="zmdi zmdi-more-vert"></i></a>
 
                                 <ul class="dropdown-menu pull-right">
-                                  <li><a href="">Mark as done</a></li>
-                                  <li><a href="">Edit</a></li>
-                                  <li><a href="" data-demo-action="delete-listing">Delete</a>
+                                  <li><a href="#">Mark as done</a></li>
+                                  <li><a href="#">Edit</a></li>
+                                  <li><a href="#" @click="deleteStep(step.stp_id, $event)">Delete</a>
                                   </li>
                                 </ul>
                               </div>
@@ -246,6 +287,5 @@
       <i class="zmdi zmdi-comment-alt-text"></i>
     </button>
 
-    <footerblock></footerblock>
   </div>
 </template>

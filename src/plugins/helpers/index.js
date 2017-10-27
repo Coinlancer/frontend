@@ -16,6 +16,40 @@ const Helpers = {
                     text: msg,
                     title: 'Success'
                 })
+            },
+
+            getCurrentRole: function (account) {
+
+                let current_role = localStorage.getItem('current_role');
+
+                switch (current_role) {
+                    case 'freelancer':
+                        if (!account.frl_id) {
+                            current_role = null;
+                        }
+                        break;
+                    case 'client':
+                        if (!account.cln_id) {
+                            current_role = null;
+                        }
+                        break;
+                    default:
+                        current_role = null;
+                }
+
+                if (!current_role) {
+                    if (account.frl_id) {
+                        current_role = 'freelancer';
+                    } else {
+                        current_role = 'client';
+                    }
+                }
+
+                if (localStorage.getItem('current_role') != current_role) {
+                    localStorage.setItem('current_role', current_role);
+                }
+
+                return current_role;
             }
         }
     }

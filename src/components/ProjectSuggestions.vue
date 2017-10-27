@@ -1,6 +1,6 @@
 <script>
-  import Projectc from './project/ProjectViewClient.vue'
-  import Projectf from './project/ProjectViewFreelancer.vue'
+  import Projectc from './project/ProjectSuggestionsViewClient.vue'
+  import Projectf from './project/ProjectSuggestionsViewFreelancer.vue'
 
   export default {
     data: function () {

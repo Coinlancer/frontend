@@ -1,9 +1,8 @@
 <script>
   import Api from '../../api/api'
   import { mapGetters } from 'vuex'
-  import Headerblock from './partials/Header.vue'
+  import Headerblock from '../partials/Header.vue'
   import Sidebar from './partials/Sidebar.vue'
-  import Footerblock from './partials/Footer.vue'
 
   import pretty from 'prettysize'
 
@@ -180,7 +179,7 @@
 
         return Api.createProject(data)
             .then(() => {
-              vm.$router.push('/dashboard/projects');
+              vm.$router.push('/projects');
               return vm.$helpers.successMsg('Project created');
             })
             .catch((err) => {
@@ -195,14 +194,13 @@
     components: {
       Headerblock,
       Sidebar,
-      Footerblock
     }
   }
 </script>
 
 <template>
   <div>
-    <headerblock></headerblock>
+    <headerblock fullwidth="true"></headerblock>
 
     <main id="main">
       <sidebar></sidebar>
@@ -390,30 +388,10 @@
           </div>
         </div>
       </div>
-      <footerblock></footerblock>
     </main>
   </div>
 </template>
 
 <style>
-  @import '../../assets/css/dashboard_contracts.css';
-</style>
-
-<style scoped>
-  .fileUpload {
-    position: relative;
-    overflow: hidden;
-    margin-right: 10px;
-  }
-  .fileUpload input.upload {
-    position: absolute;
-    top: 0;
-    right: 0;
-    margin: 0;
-    padding: 0;
-    font-size: 20px;
-    cursor: pointer;
-    opacity: 0;
-    filter: alpha(opacity=0);
-  }
+  @import 'contracts.css';
 </style>

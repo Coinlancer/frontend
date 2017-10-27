@@ -15,16 +15,15 @@ const getters = {
 
 // actions
 const actions = {
-  getAllProjects ({ commit }) {
+  getProjects ({ commit }) {
     return api.getProjects().then(response => {
-      let data = response.data.data;
+      let data = response.data;
       commit(types.RECEIVE_PROJECTS, { data })
     })
   },
   getClientProjects ({ commit }, client_id) {
     return api.getClientProjects(client_id).then(response => {
-      console.log(response);
-      let data = response.data.data;
+      let data = response.data;
       commit(types.RECEIVE_ACCOUNT_PROJECTS, { data })
     })
   },
@@ -33,10 +32,10 @@ const actions = {
 // mutations
 const mutations = {
   [types.RECEIVE_PROJECTS] (state, { data }) {
-    state.all = data.projects
+    state.all = data;
   },
   [types.RECEIVE_ACCOUNT_PROJECTS] (state, { data }) {
-    state.account = data
+    state.account = data;
   },
 };
 

@@ -15,7 +15,7 @@ const getters = {
 const actions = {
   getAllSkills ({ commit }) {
     return api.getSkills().then(response => {
-      let data = response.data.data;
+      let data = response.data;
       commit(types.RECEIVE_SKILLS, { data })
     })
   }

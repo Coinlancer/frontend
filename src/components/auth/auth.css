@@ -1,0 +1,10 @@
+.profile-type .form-group {
+    float: left;
+    margin-left: 35px;
+    margin-top: 10px;
+    margin-bottom: 20px;
+}
+
+.profile-type h5 {
+    font-size: 14px;
+}

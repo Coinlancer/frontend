@@ -3,28 +3,25 @@ import * as types from '../mutation-types'
 
 // initial state
 const state = {
-  all: [],
-  sub: []
+  categories: [],
+  subcategories: []
 };
 
 // getters
 const getters = {
-  parentCategories: state => state.all,
-  getChildCategories: state => state.sub,
+  categories: state => state.categories,
+  subcategories: state => state.subcategories,
+  subcategoriesByCategory: (state, getters) => (cat_id) => {
+    return state.subcategories.filter(subcategory => subcategory.cat_id === cat_id)
+  }
 };
 
 // actions
 const actions = {
-  getAllCategories ({ commit }) {
+  getCategories ({ commit }) {
     return api.getCategories().then(response => {
-      let data = response.data.data;
+      let data = response.data;
       commit(types.RECEIVE_CATEGORIES, { data })
-    })
-  },
-  getSubCategories ({ commit }) {
-    return api.getSubCategories().then(response => {
-      let data = response.data.data;
-      commit(types.RECEIVE_SUBCATEGORIES, { data })
     })
   }
 };
@@ -32,11 +29,9 @@ const actions = {
 // mutations
 const mutations = {
   [types.RECEIVE_CATEGORIES] (state, { data }) {
-    state.all = data.categories
-  },
-  [types.RECEIVE_SUBCATEGORIES] (state, { data }) {
-    state.sub = data.subcategories
-  },
+    state.categories = data.categories;
+    state.subcategories = data.subcategories;
+  }
 };
 
 export default {

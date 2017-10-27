@@ -1,26 +1,13 @@
 <script>
   import { mapGetters } from 'vuex'
   import Headerblock from './partials/Header.vue'
-  import Footerblock from './partials/Footer.vue'
 
   export default {
     data: function () {
       return {
-        filters: {
-          location: '',
-          job_type: '',
-          skills: [],
-          range: {
-            from: 0,
-            to: 0
-          }
-        }
+        projects: []
       }
     },
-    computed: mapGetters({
-      projects: 'allProjects',
-      skills: 'allSkills'
-    }),
     methods: {
       setFilters: function (e) {
         let vm = this;
@@ -37,12 +24,14 @@
       }
     },
     created () {
-      this.$store.dispatch('getAllProjects');
-      this.$store.dispatch('getAllSkills');
+      let vm = this;
+      vm.$store.dispatch('getProjects').then(() => {
+        console.log(vm.$store.getters);
+        vm.projects = vm.$store.getters.allProjects;
+      })
     },
     components: {
       Headerblock,
-      Footerblock
     }
   }
 </script>
@@ -62,9 +51,9 @@
         </div>
 
         <div class="action-header__item action-header__views hidden-xs">
-          <a href="listings-grid.html" class="zmdi zmdi-apps"></a>
-          <a href="listings-list.html" class="zmdi zmdi-view-list active"></a>
-          <a href="listings-map.html" class="zmdi zmdi-map"></a>
+          <a href="#" class="zmdi zmdi-apps"></a>
+          <a href="#" class="zmdi zmdi-view-list active"></a>
+          <a href="#" class="zmdi zmdi-map"></a>
         </div>
 
         <div class="action-header__item action-header__item--sort hidden-xs">
@@ -147,14 +136,14 @@
 
               <div class="card__footer">
                 <button class="btn btn-sm btn-primary">Search</button>
-                <a href="" class="btn btn-link" data-rmd-action="block-close"
+                <a href="#" class="btn btn-link" data-rmd-action="block-close"
                    data-rmd-target="#advanced-search">Save</a>
-                <a href="" class="btn btn-link" data-rmd-action="block-close"
+                <a href="#" class="btn btn-link" data-rmd-action="block-close"
                    data-rmd-target="#advanced-search">Cancel</a>
               </div>
             </form>
           </div>
-          <div class="col-sm-8 listings-list">
+          <div v-if="projects && projects.length" class="col-sm-8 listings-list">
             <div class="listings-grid__item" v-for="project in projects">
               <router-link :to="'/project/' + project.prj_id" class="media">
                 <div class="media-body">
@@ -163,17 +152,16 @@
                     <p>
                       <span v-if="project.prj_budget">
                         Fixed-Price - <b>{{project.prj_budget}} CLN</b>
-                        - Est. Budget: $100 -
                       </span>
-                       Posted <timeago :since="new Date(project.prj_created_at * 1000).toString()"></timeago></p>
+                       Posted <timeago :since="new Date(project.prj_created_at).toString()"></timeago></p>
                     <h5>{{project.prj_description}}</h5>
                   </div>
 
-                  <ul v-if="project.prj_skill_ids.length" class="listings-grid__attrs">
+                  <ul v-if="project.skills && project.skills.length" class="listings-grid__attrs">
                     <li>Skills:</li>
 
-                    <li v-for="skill_id in project.prj_skill_ids">
-                      <span class="label label-success">{{getSkillNameById(skill_id)}}</span>
+                    <li v-for="skill in project.skills">
+                      <span class="label label-success">{{skill.skl_title}}</span>
                     </li>
                   </ul>
                 </div>
@@ -187,35 +175,15 @@
                 </div>
               </div>
             </div>
-
-            <!--<nav class="text-center">-->
-              <!--<ul class="pagination">-->
-                <!--<li>-->
-                  <!--<a href="#" aria-label="Previous">-->
-                    <!--<i class="zmdi zmdi-chevron-left"></i>-->
-                  <!--</a>-->
-                <!--</li>-->
-                <!--<li class="active"><a href="#">1</a></li>-->
-                <!--<li><a href="#">2</a></li>-->
-                <!--<li><a href="#">3</a></li>-->
-                <!--<li><a href="#">4</a></li>-->
-                <!--<li><a href="#">5</a></li>-->
-                <!--<li>-->
-                  <!--<a href="#" aria-label="Next">-->
-                    <!--<i class="zmdi zmdi-chevron-right"></i>-->
-                  <!--</a>-->
-                <!--</li>-->
-              <!--</ul>-->
-            <!--</nav>-->
           </div>
+
+          <div v-else>
+            <h2>No projects are created yet</h2>
+          </div>
+
         </div>
       </div>
     </section>
 
-    <footerblock></footerblock>
   </div>
 </template>
-
-<style>
-  @import '../assets/css/my_custom.css';
-</style>

@@ -1,7 +1,6 @@
 <script>
   import api from '../api/api'
   import Headerblock from './partials/Header.vue'
-  import Footerblock from './partials/Footer.vue'
 
   export default {
     data: function () {
@@ -22,7 +21,6 @@
     },
     components: {
       Headerblock,
-      Footerblock
     }
   }
 </script>
@@ -45,7 +43,7 @@
             </div>
 
             <div class="dropdown">
-              <a href="" data-toggle="dropdown"><i class="zmdi zmdi-share"></i></a>
+              <a href="#" data-toggle="dropdown"><i class="zmdi zmdi-share"></i></a>
 
               <div class="dropdown-menu pull-right rmd-share">
                 <div></div>
@@ -145,6 +143,5 @@
       <i class="zmdi zmdi-comment-alt-text"></i>
     </button>
 
-    <footerblock></footerblock>
   </div>
 </template>

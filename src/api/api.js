@@ -11,374 +11,447 @@ axios.defaults.headers.post['Content-Type'] = 'application/x-www-form-urlencoded
 
 axios.interceptors.response.use(function (response) {
 
-  let api_response = response.data;
+    let api_response = response.data;
 
-  if (api_response.data.token) {
-    token = api_response.data.token;
-  }
+    if (api_response.data && api_response.data.token) {
+        token = api_response.data.token;
+    }
 
-  return response;
+    return api_response;
 }, function (error) {
+    //
+    // if (error.response && error.response.data) {
+    //     return Promise.reject(Vue.errors.apiError(error.response.data.error || '', error.response.data.message || ''));
+    // }
 
-  if (error.response && error.response.data) {
-    return Promise.reject(Vue.errors.apiError(error.response.data.error || '', error.response.data.message || ''));
-  }
+    // return Promise.reject(Vue.errors.innerError(Vue.errors.codes.NETWORK_ERROR));
 
-  return Promise.reject(Vue.errors.innerError(Vue.errors.codes.NETWORK_ERROR));
+    return Promise.reject(error);
 });
 
 // Set auth header before send
 axios.interceptors.request.use(function (config) {
-  if (token) {
-    config.headers['Authorization'] = 'Bearer ' + token;
-  }
+    //get token from localstorage
+    let savedToken = localStorage.getItem('token');
+    if (token) {
+        // if we get token from response and its different from saved - save new token
+        if (savedToken && savedToken != token) {
+            localStorage.setItem('token', token);
+        }
+    } else if (savedToken) {
+        // if we have saved token - take it
+        token = savedToken;
+    }
 
-  return config;
+    if (token) {
+        config.headers['Authorization'] = 'Bearer ' + token;
+    }
+
+    return config;
 });
 
 /**
  * Mocking client-server processing
  */
 const _freelancers = [
-  {
-    id: 1,
-    name: "Robert B. Osborne",
-    about: "I have developed desktop / web applications for 5+ years. I'm using: PHP, JavaScript, HTML, CSS, MySQL, and Python.",
-    rating: 4.5,
-    review_count: 2,
-    contacts: {
-      phone: "093123123123",
-      skype: "testskype",
-      email: "test@test.com"
+    {
+        id: 1,
+        name: "Robert B. Osborne",
+        about: "I have developed desktop / web applications for 5+ years. I'm using: PHP, JavaScript, HTML, CSS, MySQL, and Python.",
+        rating: 4.5,
+        review_count: 2,
+        contacts: {
+            phone: "093123123123",
+            skype: "testskype",
+            email: "test@test.com"
+        },
+        skills: [
+            {
+                title: "PHP",
+                years: "6"
+            },
+            {
+                title: "JavaScript",
+                years: "5"
+            },
+        ],
+        projects: {
+            active: 2,
+            completed: 20
+        }
     },
-    skills: [
-      {
-        title: "PHP",
-        years: "6"
-      },
-      {
-        title: "JavaScript",
-        years: "5"
-      },
-    ],
-    projects: {
-        active: 2,
-        completed: 20
+    {
+        id: 2,
+        name: "Terminator",
+        about: "I\ll be back, bitches",
+        rating: 4.5,
+        review_count: 100,
+        contacts: {
+            phone: "666 666 66 66",
+            skype: "termy",
+            email: "termy@yahoo.com"
+        },
+        skills: [
+            {
+                title: "Minigun",
+                years: "100500"
+            }
+        ],
+        projects: {
+            active: 13,
+            completed: 666
+        }
     }
-  },
-  {
-    id: 2,
-    name: "Terminator",
-    about: "I\ll be back, bitches",
-    rating: 4.5,
-    review_count: 100,
-    contacts: {
-      phone: "666 666 66 66",
-      skype: "termy",
-      email: "termy@yahoo.com"
-    },
-    skills: [
-      {
-        title: "Minigun",
-        years: "100500"
-      }
-    ],
-    projects: {
-      active: 13,
-      completed: 666
-    }
-  }
 ]
 
 const _clients = [
-  {
+    {
+        id: 1,
+        name: "Robert B. Osborne",
+        about: "I have developed desktop / web applications for 5+ years. I'm using: PHP, JavaScript, HTML, CSS, MySQL, and Python.",
+        rating: 4.5,
+        review_count: 2,
+        contacts: {
+            phone: "093123123123",
+            skype: "testskype",
+            email: "test@test.com"
+        },
+        projects: {
+            active: 2,
+            completed: 20
+        }
+    },
+    {
+        id: 2,
+        name: "Terminator",
+        about: "I\ll be back, bitches",
+        rating: 4.5,
+        review_count: 100,
+        contacts: {
+            phone: "666 666 66 66",
+            skype: "termy",
+            email: "termy@yahoo.com"
+        },
+        projects: {
+            active: 13,
+            completed: 666
+        }
+    }
+]
+
+const _projects = [
+    {
+        prj_id: 1,
+        prj_title: "test work1 multiskills",
+        prj_description: "test description",
+        prj_skill_ids: [1, 2, 3],
+        prj_category_ids: [1, 2, 3],
+        prj_client_id: 1,
+        prj_steps: [
+            {
+                title: 'Technical Support',
+                budget: 200,
+            },
+            {
+                title: 'Controller and Administration',
+                budget: 300,
+            },
+            {
+                title: 'Marketing Communications',
+                budget: 200,
+            },
+            {
+                title: 'Product Management',
+                budget: 300,
+            }
+        ],
+        prj_budget: 123.45,
+        prj_created_at: 1507723956,
+        prj_start_at: 1507763956,
+        prj_end_at: 1517923956,
+    },
+    {
+        prj_id: 2,
+        prj_title: "test work2",
+        prj_description: "test description",
+        prj_skill_ids: [1],
+        prj_category_ids: [1, 2, 3],
+        prj_client_id: 1,
+        prj_steps: [
+            {
+                title: 'Technical Support',
+                budget: 200,
+            },
+            {
+                title: 'Controller and Administration',
+                budget: 300,
+            },
+            {
+                title: 'Marketing Communications',
+                budget: 200,
+            },
+            {
+                title: 'Product Management',
+                budget: 300,
+            }
+        ],
+        prj_budget: 123.45,
+        prj_created_at: 1507723956,
+        prj_start_at: 1507763956,
+        prj_end_at: 1517923956,
+    },
+    {
+        prj_id: 3,
+        prj_title: "test work3",
+        prj_description: "test description",
+        prj_skill_ids: [2],
+        prj_category_ids: [1, 2, 3],
+        prj_client_id: 1,
+        prj_steps: [
+            {
+                title: 'Technical Support',
+                budget: 200,
+            },
+            {
+                title: 'Controller and Administration',
+                budget: 300,
+            },
+            {
+                title: 'Marketing Communications',
+                budget: 200,
+            },
+            {
+                title: 'Product Management',
+                budget: 300,
+            }
+        ],
+        prj_budget: 123.45,
+        prj_created_at: 1507723956,
+        prj_start_at: 1507763956,
+        prj_end_at: 1517923956,
+    },
+    {
+        prj_id: 4,
+        prj_title: "test work4",
+        prj_description: "test description",
+        prj_skill_ids: [3],
+        prj_category_ids: [1, 2, 3],
+        prj_client_id: 1,
+        prj_steps: [
+            {
+                title: 'Technical Support',
+                budget: 200,
+            },
+            {
+                title: 'Controller and Administration',
+                budget: 300,
+            },
+            {
+                title: 'Marketing Communications',
+                budget: 200,
+            },
+            {
+                title: 'Product Management',
+                budget: 300,
+            }
+        ],
+        prj_budget: 123.45,
+        prj_created_at: 1507723956,
+        prj_start_at: 1507763956,
+        prj_end_at: 1517923956,
+    }
+]
+
+const _languages = [
+    {lng_id: 1, lng_title: "English", lng_code: "EN"},
+    {lng_id: 2, lng_title: "Russian", lng_code: "RU"},
+    {lng_id: 3, lng_title: "Ukrainian", lng_code: "UA"}
+]
+
+const _userdata = {
     id: 1,
     name: "Robert B. Osborne",
     about: "I have developed desktop / web applications for 5+ years. I'm using: PHP, JavaScript, HTML, CSS, MySQL, and Python.",
     rating: 4.5,
     review_count: 2,
     contacts: {
-      phone: "093123123123",
-      skype: "testskype",
-      email: "test@test.com"
+        phone: "093123123123",
+        skype: "testskype",
+        email: "test@test.com"
     },
+    skills: [
+        {
+            title: "PHP",
+            years: "6"
+        },
+        {
+            title: "JavaScript",
+            years: "5"
+        },
+    ],
     projects: {
         active: 2,
         completed: 20
     }
-  },
-  {
-    id: 2,
-    name: "Terminator",
-    about: "I\ll be back, bitches",
-    rating: 4.5,
-    review_count: 100,
-    contacts: {
-      phone: "666 666 66 66",
-      skype: "termy",
-      email: "termy@yahoo.com"
-    },
-    projects: {
-      active: 13,
-      completed: 666
-    }
-  }
-]
-
-const _projects = [
-  {
-    prj_id: 1,
-    prj_title: "test work1 multiskills",
-    prj_description: "test description",
-    prj_skill_ids: [1, 2, 3],
-    prj_category_ids: [1, 2, 3],
-    prj_client_id: 1,
-    prj_steps: [
-      {
-        title: 'Technical Support',
-        budget: 200,
-      },
-      {
-        title: 'Controller and Administration',
-        budget: 300,
-      },
-      {
-        title: 'Marketing Communications',
-        budget: 200,
-      },
-      {
-        title: 'Product Management',
-        budget: 300,
-      }
-    ],
-    prj_budget: 123.45,
-    prj_created_at: 1507723956,
-    prj_start_at: 1507763956,
-    prj_end_at: 1517923956,
-  },
-  {
-    prj_id: 2,
-    prj_title: "test work2",
-    prj_description: "test description",
-    prj_skill_ids: [1],
-    prj_category_ids: [1, 2, 3],
-    prj_client_id: 1,
-    prj_steps: [
-      {
-        title: 'Technical Support',
-        budget: 200,
-      },
-      {
-        title: 'Controller and Administration',
-        budget: 300,
-      },
-      {
-        title: 'Marketing Communications',
-        budget: 200,
-      },
-      {
-        title: 'Product Management',
-        budget: 300,
-      }
-    ],
-    prj_budget: 123.45,
-    prj_created_at: 1507723956,
-    prj_start_at: 1507763956,
-    prj_end_at: 1517923956,
-  },
-  {
-    prj_id: 3,
-    prj_title: "test work3",
-    prj_description: "test description",
-    prj_skill_ids: [2],
-    prj_category_ids: [1, 2, 3],
-    prj_client_id: 1,
-    prj_steps: [
-      {
-        title: 'Technical Support',
-        budget: 200,
-      },
-      {
-        title: 'Controller and Administration',
-        budget: 300,
-      },
-      {
-        title: 'Marketing Communications',
-        budget: 200,
-      },
-      {
-        title: 'Product Management',
-        budget: 300,
-      }
-    ],
-    prj_budget: 123.45,
-    prj_created_at: 1507723956,
-    prj_start_at: 1507763956,
-    prj_end_at: 1517923956,
-  },
-  {
-    prj_id: 4,
-    prj_title: "test work4",
-    prj_description: "test description",
-    prj_skill_ids: [3],
-    prj_category_ids: [1, 2, 3],
-    prj_client_id: 1,
-    prj_steps: [
-      {
-        title: 'Technical Support',
-        budget: 200,
-      },
-      {
-        title: 'Controller and Administration',
-        budget: 300,
-      },
-      {
-        title: 'Marketing Communications',
-        budget: 200,
-      },
-      {
-        title: 'Product Management',
-        budget: 300,
-      }
-    ],
-    prj_budget: 123.45,
-    prj_created_at: 1507723956,
-    prj_start_at: 1507763956,
-    prj_end_at: 1517923956,
-  }
-]
-
-const _languages = [
-  {lng_id: 1, lng_title: "English", lng_code: "EN"},
-  {lng_id: 2, lng_title: "Russian", lng_code: "RU"},
-  {lng_id: 3, lng_title: "Ukrainian", lng_code: "UA"}
-]
-
-const _userdata = {
-  id: 1,
-  name: "Robert B. Osborne",
-  about: "I have developed desktop / web applications for 5+ years. I'm using: PHP, JavaScript, HTML, CSS, MySQL, and Python.",
-  rating: 4.5,
-  review_count: 2,
-  contacts: {
-    phone: "093123123123",
-    skype: "testskype",
-    email: "test@test.com"
-  },
-  skills: [
-    {
-      title: "PHP",
-      years: "6"
-    },
-    {
-      title: "JavaScript",
-      years: "5"
-    },
-  ],
-  projects: {
-    active: 2,
-    completed: 20
-  }
 }
 
 let handleToken = function (token) {
-  if (!token) {
-    return;
-  }
+    if (!token) {
+        return;
+    }
 
-  axios.defaults.headers.post['Authorization'] = 'Bearer ' + token;
+    axios.defaults.headers.post['Authorization'] = 'Bearer ' + token;
 }
 export default {
 
-  //ready methods
-  register (data) {
-    return axios.post('/register',
-        querystring.stringify(data)
-      )
-  },
+    //ready methods
+    register (data) {
+        return axios.post('/register',
+            querystring.stringify(data)
+        )
+    },
 
-  login (data) {
-    return axios.post('/login',
-        querystring.stringify(data)
-      );
-  },
+    login (data) {
+        return axios.post('/login',
+            querystring.stringify(data)
+        );
+    },
 
-  verifyAccount (data) {
-    return axios.post('/verify',
-        querystring.stringify(data)
-      );
-  },
+    verifyAccount (data) {
+        return axios.post('/verify',
+            querystring.stringify(data)
+        );
+    },
 
-  createProject (formdata) {
+    getAccountInfo () {
+        return axios.get('/account');
+    },
 
-    const config = {
-      headers: { 'content-type': 'multipart/form-data' }
-    }
+    activateRole (data) {
+        return axios.post('/account/role/activate',
+            querystring.stringify(data)
+        )
+    },
 
-    // return axios.post('/project/test', formdata, config);
-    return axios.post('/projects/create', formdata, config);
+    addSkill (project_id, data) {
+        return axios.post('/projects/' + project_id + '/skills',
+            querystring.stringify(data)
+        )
+    },
 
-    // return axios.post('/project/create',
-    //     querystring.stringify(data, {arrayFormat: 'bracket'})
-    // );
-  },
+    deleteSkill (project_id, data) {
+        return axios.post('/projects/' + project_id + '/skills/delete',
+            querystring.stringify(data)
+        )
+    },
 
-  getProjects () {
-    return axios.get('/projects');
-  },
+    createProject () {
 
-  getClientProjects (id) {
-    return axios.get('/projects/account/' + id);
-  },
+        // return axios.post('/project/test', formdata, config);
+        return axios.post('/projects');
 
-  getCategories () {
-    return axios.get('/categories');
-  },
+        // return axios.post('/project/create',
+        //     querystring.stringify(data, {arrayFormat: 'bracket'})
+        // );
+    },
 
-  getSubCategories () {
-    return axios.get('/subcategories');
-  },
+    updateProject (project_id, formdata) {
 
-  getSkills () {
-    return axios.get('/skills');
-  },
+        const config = {
+            headers: {'content-type': 'multipart/form-data'}
+        }
 
-  //mock methods
-  getFreelancers (cb) {
-    setTimeout(() => cb(_freelancers), 100)
-  },
+        // return axios.post('/project/test', formdata, config);
+        return axios.post('/projects/' + project_id, formdata, config);
 
-  getClients (cb) {
-    setTimeout(() => cb(_clients), 100)
-  },
+        // return axios.post('/project/create',
+        //     querystring.stringify(data, {arrayFormat: 'bracket'})
+        // );
+    },
 
-  getFreelancerData (id) {
-    return new Promise((resolve, reject) => {
-      let data = _freelancers.filter((freelancer) => {
-        return freelancer.id == id
-      });
-      if (data.length) {
-        return resolve(data[0]);
-      }
+    getProjects () {
+        return axios.get('/projects');
+    },
 
-      return reject('Not found');
-    })
-  },
+    getClientProjects (id) {
+        return axios.get('/projects/account/' + id);
+    },
 
-  getClientData (id) {
-    return new Promise((resolve, reject) => {
-      let data = _clients.filter((client) => {
-        return client.id == id
-      });
-      if (data.length) {
-        return resolve(data[0]);
-      }
+    getCategories () {
+        return axios.get('/categories');
+    },
 
-      return reject('Not found');
-    })
-  },
+    getSubCategories () {
+        return axios.get('/subcategories');
+    },
 
-  getProjectData (id) {
-    return axios.get('/projects/' + id);
-  },
+    getSkills () {
+        return axios.get('/skills');
+    },
+    //steps
+
+    deleteStep (step_id) {
+        return axios.post('/projects/steps/' + step_id + '/delete');
+    },
+
+    getSteps (project_id) {
+        return axios.get('/projects/' + project_id + '/steps');
+    },
+
+    saveStep (project_id, data) {
+        return axios.post('/projects/' + project_id + '/steps',
+            querystring.stringify(data)
+        );
+    },
+
+    getProjectSteps (project_id) {
+        return axios.get('/projects/' + project_id + '/steps');
+    },
+
+    //suggestions
+
+    createSuggestion (project_id, data) {
+        return axios.post('/projects/' + project_id + '/suggestions',
+            querystring.stringify(data)
+        );
+    },
+
+    //mock methods
+    getFreelancers (cb) {
+        setTimeout(() => cb(_freelancers), 100)
+    },
+
+    getClients (cb) {
+        setTimeout(() => cb(_clients), 100)
+    },
+
+    getFreelancerData (id) {
+        return new Promise((resolve, reject) => {
+            let data = _freelancers.filter((freelancer) => {
+                return freelancer.id == id
+            });
+            if (data.length) {
+                return resolve(data[0]);
+            }
+
+            return reject('Not found');
+        })
+    },
+
+    getClientData (id) {
+        return new Promise((resolve, reject) => {
+            let data = _clients.filter((client) => {
+                return client.id == id
+            });
+            if (data.length) {
+                return resolve(data[0]);
+            }
+
+            return reject('Not found');
+        })
+    },
+
+    getProjectData (id) {
+        return axios.get('/projects/' + id);
+    },
 }

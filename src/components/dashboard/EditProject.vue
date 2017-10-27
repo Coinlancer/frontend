@@ -1,9 +1,8 @@
 <script>
-  import Api from '../../api/api'
+  import api from '../../api/api'
   import { mapGetters } from 'vuex'
-  import Headerblock from './partials/Header.vue'
+  import Headerblock from '../partials/Header.vue'
   import Sidebar from './partials/Sidebar.vue'
-  import Footerblock from './partials/Footer.vue'
 
   import pretty from 'prettysize'
 
@@ -11,37 +10,112 @@
     data: function () {
 
       return {
+        account: null,
         parent_categories: [],
         selected_parent_category: null,
-        child_categories: null,
-        selected_child_categories: [],
-        title: 'test',
-        budget: 100,
-        description: 'test',
+        child_categories: [],
+        selected_child_category: null,
+        title: '',
+        budget: null,
+        description: '',
         deadline: null,
         skills: [],
+        last_selected_skills_ids: [],
         selected_skills: [],
         category: null,
         attachments: null,
-        steps: [{
-          title: null,
-          description: null,
-          budget: null
-        }]
+        steps: []
       }
+    },
+    beforeCreate: function () {
+      let vm = this;
+
+      return api.getProjectData(vm.$route.params.id)
+          .then(resp => {
+
+            vm.account = vm.$store.getters.accountData;
+
+            if (resp.data.project.acc_id != vm.account.acc_id) {
+              vm.$router.push('/dashboard/projects');
+            }
+
+            let project_data = resp.data.project;
+
+            vm.title = project_data.prj_title;
+            vm.budget = project_data.prj_budget;
+            vm.description = project_data.prj_description;
+            vm.deadline = project_data.prj_deadline ? project_data.prj_deadline.split(' ')[0] : null;
+
+            if (typeof resp.data.category != 'undefined' && resp.data.category && resp.data.category.cat_id) {
+              vm.selected_parent_category = {
+                value: resp.data.category.cat_id,
+                label: resp.data.category.cat_title
+              };
+
+              if (vm.selected_parent_category) {
+                let child_categories = vm.$store.getters.subcategoriesByCategory(resp.data.category.cat_id);
+                vm.child_categories = [];
+                child_categories.map(cat => {
+                  vm.child_categories.push({
+                    value: cat.sct_id,
+                    label: cat.sct_title
+                  })
+                })
+              }
+            }
+
+            if (typeof resp.data.subcategory != 'undefined' && resp.data.subcategory && resp.data.subcategory.sct_id) {
+              vm.selected_child_category = {
+                value: resp.data.subcategory.sct_id,
+                label: resp.data.subcategory.sct_title
+              };
+            }
+
+            //load steps
+            if (typeof resp.data.steps != 'undefined' && resp.data.steps.length) {
+              resp.data.steps.map(step => {
+                vm.steps.push({
+                  title: step.stp_title,
+                  description: step.stp_description,
+                  budget: step.stp_budget,
+                  id: step.stp_id,
+                  is_completed: step.stp_is_completed,
+                })
+              })
+            }
+
+            //load skills
+            if (typeof resp.data.skills != 'undefined' && resp.data.skills.length) {
+              resp.data.skills.map(skill => {
+                vm.selected_skills.push({
+                  value: skill.skl_id,
+                  label: skill.skl_title
+                })
+
+                vm.last_selected_skills_ids.push(skill.skl_id);
+              })
+            }
+
+          })
+          .catch((err) => {
+            console.error(err);
+            vm.$router.push('/dashboard/projects')
+          })
     },
     created () {
       let vm = this;
 
-      vm.$store.dispatch('getAllCategories').then(() => {
-        let parent_categories = vm.$store.getters.parentCategories;
-        parent_categories.map(category => {
+      vm.$store.dispatch('getCategories').then(() => {
+        let parent_categories = vm.$store.getters.categories;
+        vm.parent_categories = [];
+        parent_categories.map(cat => {
           vm.parent_categories.push({
-            value: category.cat_id,
-            label: category.cat_title
+            value: cat.cat_id,
+            label: cat.cat_title
           })
-        });
+        })
       });
+
       vm.$store.dispatch('getAllSkills').then(() => {
         let skills = vm.$store.getters.allSkills;
         skills.map(skill => {
@@ -63,15 +137,29 @@
         vm.attachments = e.target.files;
       },
       getChildrenCategories: function (parent_cat) {
-        this.child_categories = this.$store.getters.getChildCategory(parent_cat.value);
-      },
 
+        let vm = this;
+        let child_categories = vm.$store.getters.subcategoriesByCategory(parent_cat.value);
+
+        console.log(child_categories);
+
+        if (!child_categories) {
+          return vm.$helpers.errorMsg('Can not load subcategories list');
+        }
+        vm.child_categories = [];
+        child_categories.map(cat => {
+          vm.child_categories.push({
+            value: cat.sct_id,
+            label: cat.sct_title
+          })
+        })
+      },
       calculateStepBudget: function () {
         let vm = this;
         let steps_budget = 0;
 
         vm.steps.map((step) => {
-          steps_budget += step.budget;
+          steps_budget += parseFloat(step.budget);
         });
 
         return steps_budget;
@@ -92,11 +180,6 @@
           }
         });
 
-        if (vm.calculateStepBudget() >= vm.budget) {
-          vm.$helpers.errorMsg('Budget project already used by steps.');
-          errors = true;
-        }
-
         return errors;
       },
 
@@ -108,6 +191,11 @@
           return false;
         }
 
+        if (vm.calculateStepBudget() >= vm.budget) {
+          vm.$helpers.errorMsg('Budget project already used by steps.');
+          return false;
+        }
+
         vm.steps.push({
           title: null,
           description: null,
@@ -115,30 +203,77 @@
         });
       },
 
-      createProject: function (e) {
+      getSteps: function () {
+        let vm = this;
+        return api.getSteps(vm.$route.params.id)
+            .then((resp) => {
+              console.log(resp);
+              vm.steps = [];
+              if (typeof resp.data != 'undefined' && resp.data.length) {
+                resp.data.map(step => {
+                  vm.steps.push({
+                    title: step.stp_title,
+                    description: step.stp_description,
+                    budget: step.stp_budget,
+                    id: step.stp_id,
+                    is_completed: step.stp_is_completed,
+                  })
+                })
+              }
+            })
+            .catch((err) => {
+              console.error(err);
+              vm.$helpers.errorMsg('Can not load project steps');
+            })
+      },
+
+      saveStep: function (index, e) {
         e.preventDefault();
         let vm = this;
-        //TODO: validate data
 
-        if (vm.stepsHasErrors()) {
-          return false;
-        }
+        let data = {
+          budget: parseFloat(vm.steps[index].budget),
+          title: vm.steps[index].title,
+          description: vm.steps[index].description
+        };
 
-        if (vm.calculateStepBudget() > vm.budget) {
-          return vm.$helpers.errorMsg('Budget of steps overflow project budget');
-        }
+        return api.saveStep(vm.$route.params.id, data)
+            .then((resp) => {
+              console.log(resp);
+              return vm.getSteps();
+            })
+            .then((resp) => {
+              vm.$helpers.successMsg('Step saved');
+            })
+            .catch((err) => {
+              console.error(err);
+              vm.$helpers.errorMsg('Can not save step');
+            })
+      },
 
-        let categories = [];
+      deleteStep: function (index, e) {
+        e.preventDefault();
+        let vm = this;
 
-        vm.selected_child_categories.map(cat => {
-          categories.push(cat.value);
-        });
+        return api.deleteStep(vm.steps[index].id)
+            .then((resp) => {
+              console.log(resp);
+              return vm.getSteps();
+            })
+            .then((resp) => {
+              vm.$helpers.successMsg('Step deleted');
+            })
+            .catch((err) => {
+              console.error(err);
+              vm.$helpers.errorMsg('Can not delete step');
+            })
+      },
 
-        let skills = [];
+      updateProject: function (e) {
+        e.preventDefault();
+        let vm = this;
 
-        vm.selected_skills.map(skl => {
-          skills.push(skl.value);
-        });
+        vm.$spinner.push();
 
         let data = new FormData();
 
@@ -153,32 +288,81 @@
         data.append('budget', vm.budget);
         data.append('description', vm.description);
         data.append('deadline', vm.deadline);
-        data.append('skills', skills);
-        data.append('categories', categories);
-        data.append('steps', JSON.stringify(vm.steps));
+        data.append('subcategory_id', vm.selected_child_category.value);
 
-        return Api.createProject(data)
+        return api.updateProject(vm.$route.params.id, data)
             .then(() => {
               vm.$router.push('/dashboard/projects');
-              return vm.$helpers.successMsg('Project created');
+              return vm.$helpers.successMsg('Project updated');
             })
             .catch((err) => {
               console.error(err);
-              vm.$helpers.errorMsg('Cannot create project. Check fields');
+              vm.$helpers.errorMsg('Cannot update project. Check fields');
             })
+            .then(() => {
+              vm.$spinner.pop();
+            })
+      },
+
+      onchangeSkill: function () {
+        let vm = this;
+
+        //skill was added
+        if (vm.last_selected_skills_ids.length < vm.selected_skills.length) {
+          vm.selected_skills.map(skill => {
+            if (vm.last_selected_skills_ids.indexOf(skill.value) == -1) {
+              vm.addSkill(skill.value);
+            }
+          })
+        } else if (vm.last_selected_skills_ids.length > vm.selected_skills.length) {
+          //skill was removed
+          vm.selected_skills.map(skill => {
+            if (vm.last_selected_skills_ids.indexOf(skill.value) != -1) {
+              delete vm.last_selected_skills_ids[vm.last_selected_skills_ids.indexOf(skill.value)];
+            }
+          });
+          vm.last_selected_skills_ids.map(skill_id => {
+            vm.deleteSkill(skill_id);
+          })
+        };
+
+        //remember new skills
+        vm.last_selected_skills_ids = [];
+        vm.selected_skills.map(skill => {
+          vm.last_selected_skills_ids.push(skill.value);
+        })
+      },
+
+      addSkill: function (skill_id) {
+        let vm = this;
+
+        let data = {
+          skill_id: skill_id
+        };
+
+        return api.addSkill(vm.$route.params.id, data);
+      },
+
+      deleteSkill: function (skill_id) {
+        let vm = this;
+
+        let data = {
+          skill_id: skill_id
+        };
+
+        return api.deleteSkill(vm.$route.params.id, data);
       },
     },
     components: {
       Headerblock,
       Sidebar,
-      Footerblock
     }
   }
 </script>
 
 <template>
   <div>
-    <headerblock></headerblock>
+    <headerblock fullwidth="true"></headerblock>
 
     <main id="main">
       <sidebar></sidebar>
@@ -186,15 +370,14 @@
 
         <div class="main__container">
           <header class="main__title">
-            <h2>Create contract</h2>
+            <h2>Edit project details</h2>
           </header>
 
           <div class="row">
             <div class="col-md-12">
               <div class="card">
                 <div class="card__body">
-                  <form enctype="multipart/form-data" @submit="createProject">
-                    <h3>Add Contacts</h3>
+                  <form enctype="multipart/form-data" @submit="updateProject">
                     <div class="form-group">
                       <input type="text" v-model="title" class="form-control" placeholder="Name project">
                       <i class="form-group__bar"></i>
@@ -221,7 +404,7 @@
                     <div class="form-group">
                       <h3>Skills</h3>
 
-                      <v-select multiple v-model="selected_skills" :options="skills"></v-select>
+                      <v-select :on-change="onchangeSkill" multiple v-model="selected_skills" :options="skills"></v-select>
                     </div>
 
                     <div class="form-group">
@@ -231,9 +414,9 @@
 
                     </div>
 
-                    <div v-if="child_categories" class="form-group">
+                    <div v-if="child_categories && child_categories.length" class="form-group">
                       <h3>Subcategories</h3>
-                      <v-select multiple v-model="child_category" :options="child_categories"></v-select>
+                      <v-select v-model="selected_child_category" :options="child_categories"></v-select>
                     </div>
 
                     <div class="form-group">
@@ -244,30 +427,34 @@
                         <div v-for="(step, index) in steps" class="form-group clearfix">
 
                           <div class="form-group form-group--float" style="width: 320px;">
-                              <input type="text"
-                                     class="form-control step"
-                                     :placeholder="'Enter the title of step #' + (index + 1)"
-                                     v-model="steps[index].title"
-                              >
-                              <i class="form-group__bar"></i>
-                            </div>
-                            <div class="form-group form-group--float step-left" style="width: 320px;">
-                              <input type="number"
-                                     class="form-control step"
-                                     :placeholder="'Enter the budget of step #' + (index + 1)"
-                                     v-model="steps[index].budget"
-                              >
-                              <i class="form-group__bar"></i>
-                            </div>
-                            <div class="form-group step-form-group" style="width: 500px;">
+                            <input type="text"
+                                   class="form-control step"
+                                   :placeholder="'Enter the title of step #' + (index + 1)"
+                                   v-model="steps[index].title"
+                            >
+                            <i class="form-group__bar"></i>
+                          </div>
+                          <div class="form-group form-group--float step-left" style="width: 320px;">
+                            <input type="number"
+                                   class="form-control step"
+                                   :placeholder="'Enter the budget of step #' + (index + 1)"
+                                   v-model="steps[index].budget"
+                            >
+                            <i class="form-group__bar"></i>
+                          </div>
+                          <div class="form-group form-group--float" style="width: 500px;">
                               <textarea
                                   class="form-control textarea-autoheight"
                                   style="overflow-x: hidden; word-wrap: break-word; overflow-y: visible;"
                                   :placeholder="'Enter the description of step #' + (index + 1)"
                                   v-model="steps[index].description"
                               ></textarea>
-                              <i class="form-group__bar"></i>
-                            </div>
+                            <i class="form-group__bar"></i>
+                          </div>
+                          <div class="form-group form-group--float step-left">
+                            <button v-if="steps[index].id && !steps[index].is_completed" @click="deleteStep(index, $event)" class="btn btn-sm btn-danger">Delete step</button>
+                            <button v-else @click="saveStep(index, $event)" class="generate-button btn btn-sm btn-success">Save step</button>
+                          </div>
                         </div>
                         <button @click="addStep" class="generate-button btn btn-sm btn-primary">Add step</button>
                       </div>
@@ -276,7 +463,7 @@
 
                     </div>
                     <div class="contracts-button">
-                      <div class="fileUpload btn btn-danger">
+                      <div class="fileUpload btn btn-warning">
                         <span>Upload files</span>
                         <input type="file" @change="addAttachments" class="upload" multiple/>
                       </div>
@@ -284,7 +471,7 @@
                         {{attachments.length}} files: <span v-for="att in attachments">[{{att.name}} {{pretty(att.size)}}] </span>
                       </span>
                       <div class="contracts-button">
-                        <button class="btn btn-primary">Create</button>
+                        <button class="btn btn-primary">Update</button>
                       </div>
                     </div>
                   </form>
@@ -367,30 +554,10 @@
           </div>
         </div>
       </div>
-      <footerblock></footerblock>
     </main>
   </div>
 </template>
 
 <style>
-  @import '../../assets/css/dashboard_contracts.css';
-</style>
-
-<style scoped>
-  .fileUpload {
-    position: relative;
-    overflow: hidden;
-    margin-right: 10px;
-  }
-  .fileUpload input.upload {
-    position: absolute;
-    top: 0;
-    right: 0;
-    margin: 0;
-    padding: 0;
-    font-size: 20px;
-    cursor: pointer;
-    opacity: 0;
-    filter: alpha(opacity=0);
-  }
+  @import 'contracts.css';
 </style>
