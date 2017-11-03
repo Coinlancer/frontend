@@ -7,6 +7,7 @@
   export default {
     data: function () {
       return {
+        current_role: null,
         projects: []
       }
     },
@@ -30,10 +31,14 @@
     },
     created () {
       let vm = this;
-      let accountData = vm.$store.getters.accountData;
-      vm.$store.dispatch('getClientProjects', accountData.acc_id).then(() => {
+      let account = vm.$store.getters.accountData;
+      vm.current_role = vm.$helpers.getCurrentRole(account);
+      vm.$store.dispatch('getClientProjects', account.acc_id).then(() => {
         vm.projects = vm.$store.getters.clientProjects;
       })
+    },
+    mounted () {
+      this.$helpers.externalPluginsExecute();
     },
     components: {
       Headerblock,
@@ -47,25 +52,25 @@
     <headerblock fullwidth="true"></headerblock>
 
     <main id="main">
-      <sidebar></sidebar>
+      <sidebar :role="current_role"></sidebar>
       <section id="main__content">
         <div class="main__container">
           <div class="row">
             <div class="col-md-12" v-if="projects.length">
               <header class="main__title clearfix">
                 <h2>Contract list</h2>
-                <button class="btn btn-primary btn-sm" style="float: right;" @click="createProject">
+                <button class="btn btn-primary btn-sm hidden-xs hidden-sm" style="float: right;" @click="createProject">
                   Create project</button>
               </header>
 
               <div v-for="project in projects" class="listings-grid__item">
                   <div class="media-body">
-                    <router-link :to="'/project/' + project.prj_id" class="media">
+                    <router-link :to="'/dashboard/projects/edit/' + project.prj_id" class="media">
                       <div class="listings-grid__body">
                         <h3>{{project.prj_title}}</h3>
                         <p>
                           <span v-if="project.prj_budget">
-                          Fixed-Price - <b>{{project.prj_budget}} CLN</b>
+                          Fixed-Price - <b>{{project.prj_budget}} CL</b>
                         </span>
                           Posted <timeago :since="new Date(project.prj_created_at).toString()"></timeago>
                         </p>
@@ -79,8 +84,8 @@
                           <span class="label label-success">Update</span>
                         </router-link>
                       </li>
-                      <li><span class="label label-warning">Stop</span></li>
-                      <li><span class="label label-danger">Delete</span></li>
+                      <!--<li><span class="label label-warning">Stop</span></li>-->
+                      <!--<li><span class="label label-danger">Delete</span></li>-->
                     </ul>
                   </div>
               </div>
@@ -95,6 +100,10 @@
           </div>
         </div>
       </section>
+
+      <button class="btn btn--action btn--circle btn-success visible-sm visible-xs" @click="createProject">
+        <i class="zmdi zmdi-plus-circle-o"></i>
+      </button>
     </main>
   </div>
 </template>
@@ -149,5 +158,36 @@
   header.main__title.clearfix h2{
       float: left;
       margin-top: 10px;
+  }
+
+  .listings-grid__body>h5 {
+    text-overflow: unset;
+    white-space: inherit;
+  }
+
+  .listings-grid__body>small {
+    font-size: 17px;
+  }
+
+  .listings-grid__body>p{
+    color: #2e353b;
+  }
+
+  .respond-btn {
+    position: absolute;
+    right: 0;
+    top: 16px;
+  }
+
+  .media-body {
+    position: relative;
+  }
+
+  a.list-group-item:focus, a.list-group-item:hover, button.list-group-item:focus, button.list-group-item:hover {
+    background: none;
+  }
+
+  .listings-grid__item:hover {
+    background: none;
   }
 </style>

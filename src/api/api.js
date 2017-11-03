@@ -19,7 +19,7 @@ axios.interceptors.response.use(function (response) {
 
     return api_response;
 }, function (error) {
-    //
+
     // if (error.response && error.response.data) {
     //     return Promise.reject(Vue.errors.apiError(error.response.data.error || '', error.response.data.message || ''));
     // }
@@ -50,258 +50,14 @@ axios.interceptors.request.use(function (config) {
     return config;
 });
 
-/**
- * Mocking client-server processing
- */
-const _freelancers = [
-    {
-        id: 1,
-        name: "Robert B. Osborne",
-        about: "I have developed desktop / web applications for 5+ years. I'm using: PHP, JavaScript, HTML, CSS, MySQL, and Python.",
-        rating: 4.5,
-        review_count: 2,
-        contacts: {
-            phone: "093123123123",
-            skype: "testskype",
-            email: "test@test.com"
-        },
-        skills: [
-            {
-                title: "PHP",
-                years: "6"
-            },
-            {
-                title: "JavaScript",
-                years: "5"
-            },
-        ],
-        projects: {
-            active: 2,
-            completed: 20
-        }
-    },
-    {
-        id: 2,
-        name: "Terminator",
-        about: "I\ll be back, bitches",
-        rating: 4.5,
-        review_count: 100,
-        contacts: {
-            phone: "666 666 66 66",
-            skype: "termy",
-            email: "termy@yahoo.com"
-        },
-        skills: [
-            {
-                title: "Minigun",
-                years: "100500"
-            }
-        ],
-        projects: {
-            active: 13,
-            completed: 666
-        }
-    }
-]
-
-const _clients = [
-    {
-        id: 1,
-        name: "Robert B. Osborne",
-        about: "I have developed desktop / web applications for 5+ years. I'm using: PHP, JavaScript, HTML, CSS, MySQL, and Python.",
-        rating: 4.5,
-        review_count: 2,
-        contacts: {
-            phone: "093123123123",
-            skype: "testskype",
-            email: "test@test.com"
-        },
-        projects: {
-            active: 2,
-            completed: 20
-        }
-    },
-    {
-        id: 2,
-        name: "Terminator",
-        about: "I\ll be back, bitches",
-        rating: 4.5,
-        review_count: 100,
-        contacts: {
-            phone: "666 666 66 66",
-            skype: "termy",
-            email: "termy@yahoo.com"
-        },
-        projects: {
-            active: 13,
-            completed: 666
-        }
-    }
-]
-
-const _projects = [
-    {
-        prj_id: 1,
-        prj_title: "test work1 multiskills",
-        prj_description: "test description",
-        prj_skill_ids: [1, 2, 3],
-        prj_category_ids: [1, 2, 3],
-        prj_client_id: 1,
-        prj_steps: [
-            {
-                title: 'Technical Support',
-                budget: 200,
-            },
-            {
-                title: 'Controller and Administration',
-                budget: 300,
-            },
-            {
-                title: 'Marketing Communications',
-                budget: 200,
-            },
-            {
-                title: 'Product Management',
-                budget: 300,
-            }
-        ],
-        prj_budget: 123.45,
-        prj_created_at: 1507723956,
-        prj_start_at: 1507763956,
-        prj_end_at: 1517923956,
-    },
-    {
-        prj_id: 2,
-        prj_title: "test work2",
-        prj_description: "test description",
-        prj_skill_ids: [1],
-        prj_category_ids: [1, 2, 3],
-        prj_client_id: 1,
-        prj_steps: [
-            {
-                title: 'Technical Support',
-                budget: 200,
-            },
-            {
-                title: 'Controller and Administration',
-                budget: 300,
-            },
-            {
-                title: 'Marketing Communications',
-                budget: 200,
-            },
-            {
-                title: 'Product Management',
-                budget: 300,
-            }
-        ],
-        prj_budget: 123.45,
-        prj_created_at: 1507723956,
-        prj_start_at: 1507763956,
-        prj_end_at: 1517923956,
-    },
-    {
-        prj_id: 3,
-        prj_title: "test work3",
-        prj_description: "test description",
-        prj_skill_ids: [2],
-        prj_category_ids: [1, 2, 3],
-        prj_client_id: 1,
-        prj_steps: [
-            {
-                title: 'Technical Support',
-                budget: 200,
-            },
-            {
-                title: 'Controller and Administration',
-                budget: 300,
-            },
-            {
-                title: 'Marketing Communications',
-                budget: 200,
-            },
-            {
-                title: 'Product Management',
-                budget: 300,
-            }
-        ],
-        prj_budget: 123.45,
-        prj_created_at: 1507723956,
-        prj_start_at: 1507763956,
-        prj_end_at: 1517923956,
-    },
-    {
-        prj_id: 4,
-        prj_title: "test work4",
-        prj_description: "test description",
-        prj_skill_ids: [3],
-        prj_category_ids: [1, 2, 3],
-        prj_client_id: 1,
-        prj_steps: [
-            {
-                title: 'Technical Support',
-                budget: 200,
-            },
-            {
-                title: 'Controller and Administration',
-                budget: 300,
-            },
-            {
-                title: 'Marketing Communications',
-                budget: 200,
-            },
-            {
-                title: 'Product Management',
-                budget: 300,
-            }
-        ],
-        prj_budget: 123.45,
-        prj_created_at: 1507723956,
-        prj_start_at: 1507763956,
-        prj_end_at: 1517923956,
-    }
-]
-
-const _languages = [
-    {lng_id: 1, lng_title: "English", lng_code: "EN"},
-    {lng_id: 2, lng_title: "Russian", lng_code: "RU"},
-    {lng_id: 3, lng_title: "Ukrainian", lng_code: "UA"}
-]
-
-const _userdata = {
-    id: 1,
-    name: "Robert B. Osborne",
-    about: "I have developed desktop / web applications for 5+ years. I'm using: PHP, JavaScript, HTML, CSS, MySQL, and Python.",
-    rating: 4.5,
-    review_count: 2,
-    contacts: {
-        phone: "093123123123",
-        skype: "testskype",
-        email: "test@test.com"
-    },
-    skills: [
-        {
-            title: "PHP",
-            years: "6"
-        },
-        {
-            title: "JavaScript",
-            years: "5"
-        },
-    ],
-    projects: {
-        active: 2,
-        completed: 20
-    }
-}
-
 let handleToken = function (token) {
     if (!token) {
         return;
     }
 
     axios.defaults.headers.post['Authorization'] = 'Bearer ' + token;
-}
+};
+
 export default {
 
     //ready methods
@@ -323,8 +79,29 @@ export default {
         );
     },
 
+    updateAccountInformation (data) {
+        return axios.post('/account/update',
+            querystring.stringify(data)
+        );
+    },
+
+    updateAccountPassword (data) {
+        return axios.post('/account/password/update',
+            querystring.stringify(data)
+        );
+    },
+
     getAccountInfo () {
         return axios.get('/account');
+    },
+
+
+    addFreelancerSkill (skill_id) {
+        return axios.post('/freelancers/skills/' + skill_id);
+    },
+
+    deleteFreelancerSkill (skill_id) {
+        return axios.post('/freelancers/skills/' + skill_id + '/delete');
     },
 
     activateRole (data) {
@@ -346,35 +123,33 @@ export default {
     },
 
     createProject () {
-
-        // return axios.post('/project/test', formdata, config);
         return axios.post('/projects');
-
-        // return axios.post('/project/create',
-        //     querystring.stringify(data, {arrayFormat: 'bracket'})
-        // );
     },
 
-    updateProject (project_id, formdata) {
-
-        const config = {
-            headers: {'content-type': 'multipart/form-data'}
-        }
-
-        // return axios.post('/project/test', formdata, config);
-        return axios.post('/projects/' + project_id, formdata, config);
-
-        // return axios.post('/project/create',
-        //     querystring.stringify(data, {arrayFormat: 'bracket'})
-        // );
+    updateProject (project_id, data) {
+        return axios.post('/projects/' + project_id,
+            querystring.stringify(data)
+        );
     },
 
-    getProjects () {
-        return axios.get('/projects');
+    getProjects (filters) {
+        return axios.get('/projects' + (filters ? '?' + querystring.stringify(filters) : ''));
+    },
+
+    getProjectData (id) {
+        return axios.get('/projects/' + id);
     },
 
     getClientProjects (id) {
         return axios.get('/projects/account/' + id);
+    },
+
+    getFreelancerProjects () {
+        return axios.get('/freelancers/works');
+    },
+
+    getFreelancerSuggestions () {
+        return axios.get('/freelancers/suggestions');
     },
 
     getCategories () {
@@ -388,10 +163,34 @@ export default {
     getSkills () {
         return axios.get('/skills');
     },
-    //steps
 
-    deleteStep (step_id) {
-        return axios.post('/projects/steps/' + step_id + '/delete');
+    //attachments
+    addAttachment (project_id, attachment) {
+
+        const config = {
+            headers: {'content-type': 'multipart/form-data'}
+        };
+
+        let data = new FormData();
+
+        if (attachment) {
+            data.append('attachments[0]', attachment, attachment.name);
+        }
+
+        return axios.post('/projects/' + project_id + '/attachments', data, config);
+    },
+
+    downloadAttachment (project_id, attachment_id) {
+        return axios.get('/projects/' + project_id + '/attachments/' + attachment_id);
+    },
+
+    deleteAttachment (project_id, attachment_id) {
+        return axios.post('/projects/' + project_id + '/attachments/' + attachment_id + '/delete');
+    },
+
+    //steps
+    deleteStep (project_id, step_id) {
+        return axios.post('/projects/' + project_id + '/steps/' + step_id + '/delete');
     },
 
     getSteps (project_id) {
@@ -416,42 +215,21 @@ export default {
         );
     },
 
-    //mock methods
-    getFreelancers (cb) {
-        setTimeout(() => cb(_freelancers), 100)
+    deleteSuggestion (project_id) {
+        return axios.post('/projects/' + project_id + '/suggestions/delete');
     },
 
-    getClients (cb) {
-        setTimeout(() => cb(_clients), 100)
+    acceptSuggestion (data) {
+        return axios.post('/projects/suggestions/confirm',
+            querystring.stringify(data)
+        );
     },
 
-    getFreelancerData (id) {
-        return new Promise((resolve, reject) => {
-            let data = _freelancers.filter((freelancer) => {
-                return freelancer.id == id
-            });
-            if (data.length) {
-                return resolve(data[0]);
-            }
-
-            return reject('Not found');
-        })
+    getFreelancers () {
+        return axios.get('/freelancers');
     },
 
-    getClientData (id) {
-        return new Promise((resolve, reject) => {
-            let data = _clients.filter((client) => {
-                return client.id == id
-            });
-            if (data.length) {
-                return resolve(data[0]);
-            }
-
-            return reject('Not found');
-        })
-    },
-
-    getProjectData (id) {
-        return axios.get('/projects/' + id);
+    getFreelancerData (freelancer_id) {
+        return axios.get('/freelancers/' + freelancer_id);
     },
 }

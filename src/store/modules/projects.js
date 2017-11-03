@@ -4,19 +4,25 @@ import * as types from '../mutation-types'
 // initial state
 const state = {
   all: [],
-  account: []
+  client: [],
+  freelancer: [],
+  min_budget: 0,
+  max_budget: 0,
 };
 
 // getters
 const getters = {
   allProjects: state => state.all,
-  clientProjects: state => state.account
+  minBudget: state => state.min_budget,
+  maxBudget: state => state.max_budget,
+  clientProjects: state => state.client,
+  freelancerProjects: state => state.freelancer
 };
 
 // actions
 const actions = {
-  getProjects ({ commit }) {
-    return api.getProjects().then(response => {
+  getProjects ({ commit }, filters) {
+    return api.getProjects(filters).then(response => {
       let data = response.data;
       commit(types.RECEIVE_PROJECTS, { data })
     })
@@ -24,7 +30,13 @@ const actions = {
   getClientProjects ({ commit }, client_id) {
     return api.getClientProjects(client_id).then(response => {
       let data = response.data;
-      commit(types.RECEIVE_ACCOUNT_PROJECTS, { data })
+      commit(types.RECEIVE_CLIENT_PROJECTS, { data })
+    })
+  },
+  getFreelancerProjects ({ commit }, freelancer_id) {
+    return api.getFreelancerProjects(freelancer_id).then(response => {
+      let data = response.data;
+      commit(types.RECEIVE_FREELANCER_PROJECTS, { data })
     })
   },
 };
@@ -32,10 +44,15 @@ const actions = {
 // mutations
 const mutations = {
   [types.RECEIVE_PROJECTS] (state, { data }) {
-    state.all = data;
+    state.all = data.projects;
+    state.min_budget = data.min_budget;
+    state.max_budget = data.max_budget;
   },
-  [types.RECEIVE_ACCOUNT_PROJECTS] (state, { data }) {
-    state.account = data;
+  [types.RECEIVE_CLIENT_PROJECTS] (state, { data }) {
+    state.client = data;
+  },
+  [types.RECEIVE_FREELANCER_PROJECTS] (state, { data }) {
+    state.freelancer = data;
   },
 };
 

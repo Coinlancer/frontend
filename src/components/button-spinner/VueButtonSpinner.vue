@@ -1,12 +1,13 @@
 <template>
     <button
+            class="button-spinner"
             :class="{'vue-btn-loader-error': !isSuccess && !emptyStatus, 'vue-btn-loader-success': isSuccess, 'is-loading': isLoading}">
 
         <transition name="fade" mode="out-in">
             <div :class="{ 'spinner': loading, 'check': !emptyStatus && isSuccess && !loading, 'cross': !emptyStatus && !isSuccess && !loading }"></div>
         </transition>
 
-        <slot v-if="!isLoading && showSlot"></slot>
+        <slot v-if="showSlot"></slot>
     </button>
 </template>
 
@@ -80,6 +81,7 @@
     **/
 
     .spinner {
+        display: inline-block;
         height: 10px;
         width: 10px;
         margin-right: 8px;

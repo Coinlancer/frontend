@@ -13,7 +13,7 @@
 
       return api.getFreelancerData(vm.$route.params.id)
         .then(resp => {
-          vm.freelancer = resp;
+          vm.freelancer = resp.data;
         })
         .catch(() => {
           vm.$router.push('/projects')
@@ -29,52 +29,31 @@
   <div>
     <headerblock></headerblock>
 
-    <section v-if="freelancer" class="section">
+    <section class="section">
       <div class="container">
         <header class="section__title text-left">
-          <h2>{{freelancer.name}}</h2>
+          <h2>{{freelancer.acc_name}} {{freelancer.acc_surname}}</h2>
           <small>Freelancer</small>
-
-          <div class="actions actions--section">
-            <div class="actions__toggle">
-              <input type="checkbox">
-              <i class="zmdi zmdi-favorite-outline"></i>
-              <i class="zmdi zmdi-favorite"></i>
-            </div>
-
-            <div class="dropdown">
-              <a href="#" data-toggle="dropdown"><i class="zmdi zmdi-share"></i></a>
-
-              <div class="dropdown-menu pull-right rmd-share">
-                <div></div>
-              </div>
-            </div>
-          </div>
         </header>
 
         <div class="row">
-          <div class="col-md-8">
+          <div class="col-md-12">
             <div class="card profile">
               <div class="profile__img">
-                <img src="http://www.iconsfind.com/wp-content/uploads/2016/10/20161014_58006be216aa3.png" alt="">
+                <img src="/assets/img/default_user.png" alt="" />
               </div>
 
               <div class="profile__info">
 
-                <div class="profile__review">
-                  <span class="rmd-rate" :data-rate-value="freelancer.rating" data-rate-readonly="true"></span>
-                  <span>({{freelancer.review_count}} Review)</span>
-                </div>
-
                 <!--<div class="profile__review">-->
-                  <!--<span class="rmd-rate" :data-rate-value="freelancer.rating" data-rate-readonly="true"></span>-->
-                  <!--<span>({{freelancer.review_count}} Review)</span>-->
+                  <!--<span class="rmd-rate" data-rate-value="5" data-rate-readonly="true"></span>-->
+                  <!--<span>(2 Review)</span>-->
                 <!--</div>-->
 
                 <ul class="rmd-contact-list">
-                  <li v-if="freelancer.contacts && freelancer.contacts.skype"><i class="zmdi zmdi-skype"></i>{{freelancer.contacts.skype}}</li>
-                  <li v-if="freelancer.contacts && freelancer.contacts.phone"><i class="zmdi zmdi-phone"></i>{{freelancer.contacts.phone}}</li>
-                  <li v-if="freelancer.contacts && freelancer.contacts.email"><i class="zmdi zmdi-email"></i>{{freelancer.contacts.email}}</li>
+                  <li v-if="freelancer.acc_skype"><i class="zmdi zmdi-skype"></i>{{freelancer.acc_skype}}</li>
+                  <li v-if="freelancer.acc_phone"><i class="zmdi zmdi-phone"></i>{{freelancer.acc_phone}}</li>
+                  <li v-if="freelancer.acc_email"><i class="zmdi zmdi-email"></i>{{freelancer.acc_email}}</li>
                 </ul>
               </div>
             </div>
@@ -83,28 +62,24 @@
               <div class="tab-nav tab-nav--justified" data-rmd-breakpoint="500">
                 <div class="tab-nav__inner">
                   <ul>
-                    <li class="active">
-                      <router-link to="#summary">Summary</router-link>
-                    </li>
+                    <li class="active"><a href="#">Summary</a></li>
                     <!--<li><a href="freelancer-closed-pr-page.html">Closed projects</a></li> -->
-                    <li>
-                      <router-link to="#reviews">Reviews</router-link>
-                    </li>
+                    <!--<li><a href="freelancer-profile-reviews-pr-page.html">Reviews</a></li>-->
                   </ul>
                 </div>
               </div>
 
               <div class="card__body">
                 <div class="card__sub row rmd-stats">
-                  <div class="col-xs-4 col-xs-offset-2">
+                  <div class="col-xs-12 col-md-6 col-lg-4 col-lg-offset-1">
                     <div class="rmd-stats__item mdc-bg-teal-400">
-                      <h2>{{freelancer.projects.active}}</h2>
+                      <h2>{{freelancer.active_projects_count}}</h2>
                       <small>Active Projects</small>
                     </div>
                   </div>
-                  <div class="col-xs-4">
+                  <div class="col-xs-12 col-md-6 col-lg-4 col-lg-offset-1">
                     <div class="rmd-stats__item mdc-bg-purple-400">
-                      <h2>{{freelancer.projects.completed}}</h2>
+                      <h2>0</h2>
                       <small>completed projects</small>
                     </div>
                   </div>
@@ -112,24 +87,17 @@
                 </div>
 
                 <div class="card__sub">
-                  <h4>About {{freelancer.name}}</h4>
-
-                  {{freelancer.about}}
+                  <h4>About {{freelancer.acc_name}} {{freelancer.acc_surname}}</h4>
+                  {{freelancer.acc_description}}
                 </div>
 
-                <!--<div class="card__sub">
-                    <h4>Specialties</h4>
-                    <p>PHP, HTML5, JavaScript, CSS, Linux System Administration</p>
-                </div>
-    -->
-
-                <div v-if="freelancer.skills" class="card__sub">
+                <div class="card__sub" v-if="freelancer.skills && freelancer.skills.length">
                   <h4>Skills</h4>
                   <div class="list-group list-group--condensed list-group--bordered list-group--striped">
 
                     <div v-for="skill in freelancer.skills" class="list-group-item clearfix">
-                      <div class="pull-left text-muted">{{skill.title}}</div>
-                      <div class="pull-right"><strong class="text-strong">{{skill.years}} Year</strong></div>
+                      <div class="pull-left text-muted">{{skill.skl_title}}</div>
+                      <!--<div class="pull-right"><strong class="text-strong">6 Year</strong></div>-->
                     </div>
                   </div>
                 </div>
@@ -149,38 +117,9 @@
               </div>
             </div>
           </div>
-
-          <div class="col-md-4 rmd-sidebar-mobile" id="agent-question">
-            <form class="card">
-              <div class="card__header">
-                <h2>Send message</h2>
-              </div>
-
-              <div class="card__body m-t-10">
-
-                <div class="form-group form-group--float">
-                  <textarea class="form-control textarea-autoheight" rows="8"></textarea>
-                  <i class="form-group__bar"></i>
-                  <label>Message</label>
-                </div>
-              </div>
-
-              <div class="card__footer">
-                <button class="btn btn-primary">Send</button>
-                <button class="btn btn-sm btn-link">Reset</button>
-                <button class="btn btn-sm btn-link visible-sm-inline visible-xs-inline" data-rmd-action="block-close" data-rmd-target="#agent-question">Cancel</button>
-              </div>
-            </form>
-          </div>
         </div>
       </div>
     </section>
-
-    <!-- Contact Button for mobile -->
-    <button class="btn btn--action btn--circle visible-sm visible-xs" data-rmd-action="block-open"
-            data-rmd-target="#agent-question">
-      <i class="zmdi zmdi-comment-alt-text"></i>
-    </button>
 
   </div>
 </template>

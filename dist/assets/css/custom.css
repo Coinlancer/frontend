@@ -1,3 +1,24 @@
 .capitalize {
   text-transform: capitalize;
 }
+
+.form-control.error, .form-control.error:focus {
+   color: #e71c25;
+   border-bottom: 1px solid #e71c25;
+}
+
+.form-control:focus {
+    border-bottom: 1px solid #189BC6;
+}
+
+label[id$="-error"] {
+    color: #e71c25;
+    text-align: right;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.form-control.error::-webkit-input-placeholder {color:#e71c25;}
+.form-control.error::-moz-placeholder          {color:#e71c25;}/* Firefox 19+ */
+.form-control.error:-moz-placeholder           {color:#e71c25;}/* Firefox 18- */
+.form-control.error:-ms-input-placeholder      {color:#e71c25;}

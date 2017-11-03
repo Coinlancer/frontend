@@ -2,6 +2,7 @@
   import api from '../../api/api'
   import { mapGetters } from 'vuex'
   import Headerblock from '../partials/Header.vue'
+  import config from '../../config/index'
 
   //libraries
   import keythereum from 'keythereum';
@@ -30,6 +31,22 @@
       categories: 'allCategories',
     }),
     methods: {
+
+      downloadAttachment: function (attachment_id, e) {
+        let vm = this;
+        e.preventDefault();
+
+        attachment_id = parseInt(attachment_id);
+
+        if (attachment_id) {
+          //temporary hack
+          let url = config.api_host + '/projects/' + vm.$route.params.id + '/attachments/' + attachment_id;
+          var win = window.open(url, '_blank');
+
+          return win.focus();
+        }
+      },
+
       deleteStep: function (step_id, event) {
         let vm = this;
         let dialog_context = null;
@@ -42,7 +59,7 @@
         vm.$dialog.confirm("Confirm step deleting")
             .then((dialog) => {
               dialog_context = dialog;
-              return api.deleteStep(step_id);
+              return api.deleteStep(vm.$route.params.id, step_id);
             })
             .then(() => {
               return api.getProjectSteps(vm.$route.params.id);
@@ -103,17 +120,13 @@
 //        console.error(r);
 //        return false;
 //      }
-
-      $(".rmd-rate")[0] && $(".rmd-rate").each(function () {
-        var rate = $(this).data("rate-value"), readOnly = $(this).data("rate-readonly");
-        $(this).rateYo({
-          rating: rate,
-          fullStar: !0,
-          starWidth: "18px",
-          ratedFill: "#fcd461",
-          normalFill: "#eee",
-          readOnly: readOnly || "false"
-        })
+    },
+    mounted: function () {
+      let vm = this;
+      this.$nextTick(function () {
+        // Code that will run only after the
+        // entire view has been rendered
+        vm.$helpers.externalPluginsExecute();
       })
     },
     components: {
@@ -154,27 +167,15 @@
               <div class="profile__img">
                 <img src="/assets/img/default_user.png" alt="">
               </div>
-              <!--<div class="profile__info">-->
-                <!--<div class="profile__review">-->
-                  <!--<span class="rmd-rate" :data-rate-value="client.rating" data-rate-readonly="true"></span>-->
-                  <!--<span>({{client.review_count}} Review)</span>-->
-                <!--</div>-->
-                <!--<ul class="rmd-contact-list">-->
-                  <!--<li v-if="client.contacts && client.contacts.skype"><i class="zmdi zmdi-skype"></i>{{client.contacts.skype}}</li>-->
-                  <!--<li v-if="client.contacts && client.contacts.phone"><i class="zmdi zmdi-phone"></i>{{client.contacts.phone}}</li>-->
-                  <!--<li v-if="client.contacts && client.contacts.email"><i class="zmdi zmdi-email"></i>{{client.contacts.email}}</li>-->
-                <!--</ul>-->
-              <!--</div>-->
               <div class="profile__info">
                 <strong><a href="#">{{project.acc_name}} {{project.acc_surname}}</a></strong>
                 <div class="profile__review">
                   <span class="rmd-rate" data-rate-value="3" data-rate-readonly="true"></span>
-                  <span>(263 Review)</span>
                 </div>
                 <ul class="rmd-contact-list">
-                  <li><i class="zmdi zmdi-skype"></i>Skeper_200</li>
-                  <li><i class="zmdi zmdi-phone"></i>308-360-8938</li>
-                  <li><i class="zmdi zmdi-email"></i>malinda@inbound.plus</li>
+                  <li><i v-if="project.acc_skype" class="zmdi zmdi-skype"></i>{{project.acc_skype}}</li>
+                  <li><i v-if="project.acc_phone" class="zmdi zmdi-phone"></i>{{project.acc_phone}}</li>
+                  <li><i v-if="project.acc_email" class="zmdi zmdi-email"></i>{{project.acc_email}}</li>
                 </ul>
               </div>
             </div>
@@ -205,7 +206,7 @@
                   </div>
                   <div class="col-xs-4">
                     <div class="rmd-stats__item mdc-bg-red-400">
-                      <h2>{{project.prj_budget}} CLN</h2>
+                      <h2>{{project.prj_budget}} CL</h2>
                       <small>Price</small>
                     </div>
                   </div>
@@ -238,7 +239,7 @@
                                 <span class="checkbox__helper"></span>
                                 <span class="tasks-list__info">
                                     {{step.stp_title}}
-                                    <span class="price-project">{{step.stp_budget}} CLN</span>
+                                    <span class="price-project">{{step.stp_budget}} CL</span>
                                 </span>
                               </label>
                             </div>
@@ -249,8 +250,8 @@
                                     class="zmdi zmdi-more-vert"></i></a>
 
                                 <ul class="dropdown-menu pull-right">
-                                  <li><a href="#">Mark as done</a></li>
-                                  <li><a href="#">Edit</a></li>
+                                  <!--<li><a href="#">Mark as done</a></li>-->
+                                  <!--<li><a href="#">Edit</a></li>-->
                                   <li><a href="#" @click="deleteStep(step.stp_id, $event)">Delete</a>
                                   </li>
                                 </ul>
@@ -263,17 +264,16 @@
                   </div>
                 </div>
 
-                <!--<div class="card__sub">-->
-                <!--<h4>Contact Information</h4>-->
+                <div v-if="attachments && attachments.length" class="card__sub">
+                  <h4>Uploaded files</h4>
+                  <span></span>
+                  <div class="steps">
+                    <div v-for="(attachment, index) in attachments" class="form-group clearfix">
+                      <a href="#" @click="downloadAttachment(attachment.tch_id, $event)">{{attachment.tch_title}}</a>
+                    </div>
+                  </div>
+                </div>
 
-                <!--<ul class="rmd-contact-list">-->
-                <!--<li><i class="zmdi zmdi-phone"></i>308-360-8938</li>-->
-                <!--<li><i class="zmdi zmdi-email"></i>robertbosborne@inbound.plus</li>-->
-                <!--<li><i class="zmdi zmdi-facebook"></i>robertbosborne</li>-->
-                <!--<li><i class="zmdi zmdi-twitter"></i>@robertbosborne</li>-->
-                <!--<li><i class="zmdi zmdi-pin"></i>5470 Madison Street Severna Park, MD 21146</li>-->
-                <!--</ul>-->
-                <!--</div>-->
               </div>
             </div>
           </div>
@@ -282,7 +282,7 @@
     </section>
 
     <!-- Contact Button for mobile -->
-    <button class="btn btn--action btn--circle visible-sm visible-xs" data-rmd-action="block-open"
+    <button v-if="account && account.acc_id" class="btn btn--action btn--circle visible-sm visible-xs" data-rmd-action="block-open"
             data-rmd-target="#agent-question">
       <i class="zmdi zmdi-comment-alt-text"></i>
     </button>

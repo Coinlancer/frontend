@@ -3,13 +3,22 @@
 
   export default {
 
+    props: ['role'],
     data: function () {
       let vm = this;
 
-      let account = vm.$store.getters.accountData;
+      if (!vm.role) {
+        let account = vm.$store.getters.accountData;
+        vm.role = vm.$helpers.getCurrentRole(account)
+      }
 
       return {
-        current_role: vm.$helpers.getCurrentRole(account)
+        current_role: vm.role
+      }
+    },
+    watch: {
+      role: function(role) {
+        this.current_role = role
       }
     }
   }
@@ -23,7 +32,7 @@
 
     <ul class="main-menu">
       <li>
-        <router-link to="#">
+        <router-link to="/dashboard/finances">
           <i class="zmdi zmdi-money"></i>Finances
         </router-link>
       </li>
@@ -32,19 +41,29 @@
           <i class="zmdi zmdi-assignment"></i>Works
         </router-link>
       </li>
-      <li v-else>
+      <li v-if="current_role == 'freelancer'">
+        <router-link to="/dashboard/suggestions">
+          <i class="zmdi zmdi-assignment"></i>Suggestions
+        </router-link>
+      </li>
+      <li v-if="current_role == 'client'">
         <router-link to="/dashboard/projects">
           <i class="zmdi zmdi-assignment"></i>Projects
         </router-link>
       </li>
+      <!--<li>-->
+        <!--<router-link to="#">-->
+          <!--<i class="zmdi zmdi-comment-alt"></i>Messages-->
+        <!--</router-link>-->
+      <!--</li>-->
+      <!--<li>-->
+        <!--<router-link to="#">-->
+          <!--<i class="zmdi zmdi-check-circle"></i>Page settings-->
+        <!--</router-link>-->
+      <!--</li>-->
       <li>
-        <router-link to="#">
-          <i class="zmdi zmdi-comment-alt"></i>Messages
-        </router-link>
-      </li>
-      <li>
-        <router-link to="#">
-          <i class="zmdi zmdi-check-circle"></i>Page settings
+        <router-link to="/dashboard/profile">
+          <i class="zmdi zmdi-file-text"></i>Profile settings
         </router-link>
       </li>
       <li>

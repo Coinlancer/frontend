@@ -5,12 +5,15 @@
   import Sidebar from './partials/Sidebar.vue'
 
   import pretty from 'prettysize'
+  import moment from 'moment'
+  import config from '../../config/index'
 
   export default {
     data: function () {
 
       return {
         account: null,
+        del_attach_is_loading: false,
         parent_categories: [],
         selected_parent_category: null,
         child_categories: [],
@@ -18,13 +21,48 @@
         title: '',
         budget: null,
         description: '',
-        deadline: null,
         skills: [],
         last_selected_skills_ids: [],
         selected_skills: [],
         category: null,
-        attachments: null,
-        steps: []
+        attachments: [],
+        steps: [],
+        //for date picker
+        deadline: {
+          time: ''
+        },
+        limit: [{
+          type: 'fromto',
+          from: moment().format('YYYY-MM-DD'),
+          to: '2999-01-01'
+        }],
+        option: {
+          type: 'day',
+          week: ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'],
+          month: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
+          format: 'YYYY-MM-DD',
+          placeholder: 'Deadline',
+          inputStyle: {
+            'display': 'inline-block',
+            'padding': '6px',
+            'line-height': '22px',
+            'font-size': '16px',
+            'border': '2px solid #fff',
+            'box-shadow': '0 1px 3px 0 rgba(0, 0, 0, 0.2)',
+            'border-radius': '2px',
+            'color': '#5F5F5F'
+          },
+          color: {
+            header: '#ccc',
+            headerText: '#f00'
+          },
+          buttons: {
+            ok: 'Ok',
+            cancel: 'Cancel'
+          },
+          overlayOpacity: 0.5, // 0.5 as default
+          dismissible: true // as true as default
+        },
       }
     },
     beforeCreate: function () {
@@ -44,7 +82,7 @@
             vm.title = project_data.prj_title;
             vm.budget = project_data.prj_budget;
             vm.description = project_data.prj_description;
-            vm.deadline = project_data.prj_deadline ? project_data.prj_deadline.split(' ')[0] : null;
+            vm.deadline.time = project_data.prj_deadline ? project_data.prj_deadline.split(' ')[0] : null;
 
             if (typeof resp.data.category != 'undefined' && resp.data.category && resp.data.category.cat_id) {
               vm.selected_parent_category = {
@@ -96,6 +134,11 @@
               })
             }
 
+            //load attachments
+            if (typeof resp.data.attachments != 'undefined' && resp.data.attachments.length) {
+              vm.attachments = resp.data.attachments;
+            }
+
           })
           .catch((err) => {
             console.error(err);
@@ -128,32 +171,103 @@
 
     },
     methods: {
+
       pretty: function (size) {
         return pretty(size);
       },
+
       addAttachments: function (e) {
         let vm = this;
         e.preventDefault();
-        vm.attachments = e.target.files;
-      },
-      getChildrenCategories: function (parent_cat) {
 
+        if (e.target.files) {
+          for (var i = 0; i < e.target.files.length; i++) {
+            let file = e.target.files[i];
+            if (file.size > config.MAX_FILE_SIZE_IN_BYTES) {
+              vm.$helpers.errorMsg('File ' + file.name + ' is too big. Limit is ' + vm.$humanize.filesize(config.MAX_FILE_SIZE_IN_BYTES));
+            } else {
+
+              api.addAttachment(vm.$route.params.id, file)
+                .then((resp) => {
+                  vm.attachments.push(resp.data);
+                })
+                .catch((err) => {
+                  console.error(err);
+                  vm.$helpers.errorMsg('Can not add attachment ' + file.name);
+                })
+                .then(() => {
+                  e.target.value = '';
+                })
+            }
+          }
+        }
+      },
+
+      deleteAttachment: function (attachment_id, e) {
+        let vm = this;
+        e.preventDefault();
+
+        attachment_id = parseInt(attachment_id);
+
+        if (!attachment_id) {
+          return;
+        }
+
+        vm.del_attach_is_loading = true;
+
+        return api.deleteAttachment(vm.$route.params.id, attachment_id)
+            .then(() => {
+              //todo remove after getAttachments method will added
+              console.log(vm.attachments);
+              vm.attachments.map((file, index) => {
+                if (file.tch_id == attachment_id) {
+                  vm.attachments.splice(index, 1);
+                }
+              })
+            })
+            .catch((err) => {
+              console.error(err);
+              vm.$helpers.errorMsg('Can not delete attachment ' + file.name);
+            })
+            .then(() => {
+              vm.del_attach_is_loading = false;
+            })
+      },
+
+      downloadAttachment: function (attachment_id, e) {
+        let vm = this;
+        e.preventDefault();
+
+        attachment_id = parseInt(attachment_id);
+
+        if (attachment_id) {
+          //temporary hack
+          let url = config.api_host + '/projects/' + vm.$route.params.id + '/attachments/' + attachment_id;
+          var win = window.open(url, '_blank');
+
+          return win.focus();
+          //return api.downloadAttachment(vm.$route.params.id, attachment_id);
+        }
+      },
+
+      getChildrenCategories: function (parent_cat) {
         let vm = this;
         let child_categories = vm.$store.getters.subcategoriesByCategory(parent_cat.value);
-
-        console.log(child_categories);
 
         if (!child_categories) {
           return vm.$helpers.errorMsg('Can not load subcategories list');
         }
+
         vm.child_categories = [];
-        child_categories.map(cat => {
+
+        child_categories.map((cat) => {
           vm.child_categories.push({
             value: cat.sct_id,
             label: cat.sct_title
           })
         })
       },
+
       calculateStepBudget: function () {
         let vm = this;
         let steps_budget = 0;
@@ -174,9 +288,9 @@
             errors = true;
             vm.$helpers.errorMsg('Title of step #' + (index + 1) + ' is empty');
           }
-          if (!step.budget) {
+          if (!step.budget || parseFloat(step.budget) <= 0) {
             errors = true;
-            return vm.$helpers.errorMsg('Budget of step #' + (index + 1) + ' is empty');
+            vm.$helpers.errorMsg('Budget of step #' + (index + 1) + ' is empty');
           }
         });
 
@@ -231,6 +345,10 @@
         e.preventDefault();
         let vm = this;
 
+        if (vm.stepsHasErrors()) {
+          return;
+        }
+
         let data = {
           budget: parseFloat(vm.steps[index].budget),
           title: vm.steps[index].title,
@@ -255,7 +373,7 @@
         e.preventDefault();
         let vm = this;
 
-        return api.deleteStep(vm.steps[index].id)
+        return api.deleteStep(vm.$route.params.id, vm.steps[index].id)
             .then((resp) => {
               console.log(resp);
               return vm.getSteps();
@@ -273,22 +391,35 @@
         e.preventDefault();
         let vm = this;
 
-        vm.$spinner.push();
-
-        let data = new FormData();
-
-        if (vm.attachments) {
-          for (var i = 0; i < vm.attachments.length; i++) {
-            let file = vm.attachments[i];
-            data.append('attachments[' + i + ']', file, file.name);
-          }
+        if (!vm.title || !vm.title.length) {
+          return vm.$helpers.errorMsg('Enter project title');
         }
 
-        data.append('title', vm.title);
-        data.append('budget', vm.budget);
-        data.append('description', vm.description);
-        data.append('deadline', vm.deadline);
-        data.append('subcategory_id', vm.selected_child_category.value);
+        if (!vm.budget || !parseFloat(vm.budget)) {
+          return vm.$helpers.errorMsg('Enter project budget');
+        }
+
+        if (!vm.description || !vm.description.length) {
+          return vm.$helpers.errorMsg('Enter project description');
+        }
+
+        if (!vm.deadline || !vm.deadline.time || !vm.deadline.time.length) {
+          return vm.$helpers.errorMsg('Enter project deadline');
+        }
+
+        if (!vm.selected_child_category || !vm.selected_child_category.value) {
+          return vm.$helpers.errorMsg('Select project category and subcategory');
+        }
+
+        vm.$spinner.push();
+
+        let data = {
+          title: vm.title,
+          budget: parseFloat(vm.budget),
+          description: vm.description,
+          deadline: vm.deadline.time,
+          subcategory_id: vm.selected_child_category.value,
+        };
 
         return api.updateProject(vm.$route.params.id, data)
             .then(() => {
@@ -324,7 +455,7 @@
           vm.last_selected_skills_ids.map(skill_id => {
             vm.deleteSkill(skill_id);
           })
-        };
+        }
 
         //remember new skills
         vm.last_selected_skills_ids = [];
@@ -353,6 +484,9 @@
         return api.deleteSkill(vm.$route.params.id, data);
       },
     },
+    mounted () {
+      this.$helpers.externalPluginsExecute();
+    },
     components: {
       Headerblock,
       Sidebar,
@@ -365,7 +499,7 @@
     <headerblock fullwidth="true"></headerblock>
 
     <main id="main">
-      <sidebar></sidebar>
+      <sidebar role="client"></sidebar>
       <section id="main__content">
 
         <div class="main__container">
@@ -383,7 +517,7 @@
                       <i class="form-group__bar"></i>
                     </div>
                     <div class="form-group">
-                      <input type="number" v-model="budget" class="form-control" placeholder="Budget">
+                      <input type="number" min="0" v-model="budget" class="form-control" placeholder="Budget">
                       <i class="form-group__bar"></i>
                     </div>
                     <div class="form-group form-group--float">
@@ -397,7 +531,7 @@
                     </div>
                     <div class="form-group">
                       <h3>Deadline</h3>
-                      <input type="date" v-model="deadline" class="form-control" placeholder="Deadline project">
+                      <date-picker :date="deadline" :option="option" :limit="limit"></date-picker>
                       <i class="form-group__bar"></i>
                     </div>
 
@@ -426,7 +560,7 @@
                       <div class="steps" v-if="budget">
                         <div v-for="(step, index) in steps" class="form-group clearfix">
 
-                          <div class="form-group form-group--float" style="width: 320px;">
+                          <div class="form-group form-group--float hidden-xs hidden-sm" style="width: 320px;">
                             <input type="text"
                                    class="form-control step"
                                    :placeholder="'Enter the title of step #' + (index + 1)"
@@ -434,16 +568,18 @@
                             >
                             <i class="form-group__bar"></i>
                           </div>
-                          <div class="form-group form-group--float step-left" style="width: 320px;">
+                          <div class="form-group form-group--float step-left hidden-xs hidden-sm" style="width: 320px;">
                             <input type="number"
+                                   min="0"
                                    class="form-control step"
                                    :placeholder="'Enter the budget of step #' + (index + 1)"
                                    v-model="steps[index].budget"
                             >
                             <i class="form-group__bar"></i>
                           </div>
-                          <div class="form-group form-group--float" style="width: 500px;">
+                          <div class="form-group form-group--float hidden-xs hidden-sm" style="width: 500px;">
                               <textarea
+                                  rows="5"
                                   class="form-control textarea-autoheight"
                                   style="overflow-x: hidden; word-wrap: break-word; overflow-y: visible;"
                                   :placeholder="'Enter the description of step #' + (index + 1)"
@@ -451,9 +587,41 @@
                               ></textarea>
                             <i class="form-group__bar"></i>
                           </div>
-                          <div class="form-group form-group--float step-left">
-                            <button v-if="steps[index].id && !steps[index].is_completed" @click="deleteStep(index, $event)" class="btn btn-sm btn-danger">Delete step</button>
-                            <button v-else @click="saveStep(index, $event)" class="generate-button btn btn-sm btn-success">Save step</button>
+
+                          <div class="form-group form-group--float col-sm-12 visible-xs visible-sm">
+                            <input type="text"
+                                   class="form-control step"
+                                   :placeholder="'Enter the title of step #' + (index + 1)"
+                                   v-model="steps[index].title"
+                            >
+                            <i class="form-group__bar"></i>
+                          </div>
+                          <div class="form-group form-group--float col-sm-12 visible-xs visible-sm">
+                            <input type="number"
+                                   min="0"
+                                   class="form-control step"
+                                   :placeholder="'Enter the budget of step #' + (index + 1)"
+                                   v-model="steps[index].budget"
+                            >
+                            <i class="form-group__bar"></i>
+                          </div>
+                          <div class="form-group form-group--float col-sm-12  clearfix visible-xs visible-sm">
+                              <textarea
+                                  rows="5"
+                                  class="form-control textarea-autoheight"
+                                  style="overflow-x: hidden; word-wrap: break-word; overflow-y: visible;"
+                                  :placeholder="'Enter the description of step #' + (index + 1)"
+                                  v-model="steps[index].description"
+                              ></textarea>
+                            <i class="form-group__bar"></i>
+                          </div>
+                          <div class="form-group form-group--float hidden-lg col-lg-12">
+                            <button v-if="steps[index].id && !steps[index].is_completed" @click="deleteStep(index, $event)" class="btn btn-sm btn-danger" style="margin-left: -12px;">Delete step</button>
+                            <button v-else @click="saveStep(index, $event)" class="generate-button btn btn-sm btn-success" style="margin-left: -12px;">Save step</button>
+                          </div>
+                          <div class="form-group form-group--float visible-lg col-lg-12">
+                            <button v-if="steps[index].id && !steps[index].is_completed" @click="deleteStep(index, $event)" class="btn btn-sm btn-danger" style="margin-left: -12px;">Delete step</button>
+                            <button v-else @click="saveStep(index, $event)" class="generate-button btn btn-sm btn-success" style="margin-left: -12px;">Save step</button>
                           </div>
                         </div>
                         <button @click="addStep" class="generate-button btn btn-sm btn-primary">Add step</button>
@@ -462,14 +630,30 @@
                       <div v-else><span class="text-warning">For adding steps set budget at first</span></div>
 
                     </div>
+
+                    <div v-if="attachments && attachments.length" class="form-group">
+                      <h3>Uploaded files</h3>
+                      <span></span>
+                      <div class="steps">
+                        <div v-for="(attachment, index) in attachments" class="form-group clearfix">
+                          <a href="#" @click="downloadAttachment(attachment.tch_id, $event)">{{attachment.tch_title}}</a>
+                          <button-spinner
+                              v-on:click.native="deleteAttachment(attachment.tch_id, $event)"
+                              :isLoading="del_attach_is_loading"
+                              :disabled="del_attach_is_loading"
+                              class="btn btn-xs btn-danger m-l-10"
+                          >
+                            <span>Delete</span>
+                          </button-spinner>
+                        </div>
+                      </div>
+                    </div>
+
                     <div class="contracts-button">
                       <div class="fileUpload btn btn-warning">
                         <span>Upload files</span>
                         <input type="file" @change="addAttachments" class="upload" multiple/>
                       </div>
-                      <span v-if="attachments">
-                        {{attachments.length}} files: <span v-for="att in attachments">[{{att.name}} {{pretty(att.size)}}] </span>
-                      </span>
                       <div class="contracts-button">
                         <button class="btn btn-primary">Update</button>
                       </div>
@@ -481,79 +665,6 @@
           </div>
         </div>
       </section>
-
-      <!-- View Contact -->
-      <div class="modal fade" id="view-contact">
-        <div class="modal-dialog">
-          <div class="modal-content">
-            <div class="modal-body text-center">
-              <div class="view-contact__img">
-                <img src="/assets/img/demo/people/2.jpg" class="img-circle" width="150" height="150" alt="">
-              </div>
-
-              <div class="m-t-25">
-                <h4>Mallinda Hollaway</h4>
-                <small>421 Walnut St. Hartford, CT 06106, United States</small>
-              </div>
-
-              <div class="m-t-25">
-                <small>Email Address</small>
-                <div class="text-strong m-t-5">mallinda-h@gmail.com</div>
-              </div>
-
-              <div class="m-t-25">
-                <small>Mobile Phone</small>
-                <div class="text-strong m-t-5">(203) 991-4171</div>
-              </div>
-
-              <div class="m-t-25">
-                <small>Home Phone</small>
-                <div class="text-strong m-t-5">(902) 093-3923</div>
-              </div>
-            </div>
-
-            <div class="modal-footer text-center modal-footer--bordered">
-              <button type="button" class="btn btn-link" data-dismiss="modal">Close</button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Add to group modal -->
-      <div class="modal fade" id="add-to-group" data-backdrop="static" data-keyboard="false">
-        <div class="modal-dialog">
-          <div class="modal-content">
-            <div class="modal-header">
-              <h4 class="modal-title">Add to group</h4>
-            </div>
-
-            <div class="contact-highlight media">
-              <div class="pull-left">
-                <img src="/assets/img/demo/people/1.jpg" class="img-circle" width="50" height="50" alt="">
-              </div>
-              <div class="media-body">
-                <strong>Mallinda Hollaway</strong>
-
-                <div class="list-group__attrs m-t-5">
-                  <div>mallinda-h@hmail.com</div>
-                  <div>(203) 991-4171</div>
-                </div>
-              </div>
-            </div>
-
-            <div class="modal-body">
-              <div class="form-group m-0">
-                <input type="text" class="form-control" placeholder="Group name...">
-                <i class="form-group__bar"></i>
-              </div>
-            </div>
-            <div class="modal-footer">
-              <button type="button" class="btn btn-link" data-dismiss="modal">Dismiss</button>
-              <button type="button" class="btn btn-link">Add</button>
-            </div>
-          </div>
-        </div>
-      </div>
     </main>
   </div>
 </template>

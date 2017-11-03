@@ -34,22 +34,6 @@
         <header class="section__title text-left">
           <h2>{{client.name}}</h2>
           <small>Client</small>
-
-          <div class="actions actions--section">
-            <div class="actions__toggle">
-              <input type="checkbox">
-              <i class="zmdi zmdi-favorite-outline"></i>
-              <i class="zmdi zmdi-favorite"></i>
-            </div>
-
-            <div class="dropdown">
-              <a href="#" data-toggle="dropdown"><i class="zmdi zmdi-share"></i></a>
-
-              <div class="dropdown-menu pull-right rmd-share">
-                <div></div>
-              </div>
-            </div>
-          </div>
         </header>
 
         <div class="row">

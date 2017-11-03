@@ -19,7 +19,7 @@
 
 <template>
   <div>
-    <projectc v-if="current_role == 'client'"></projectc>
+    <projectc v-if="!current_role || current_role == 'client'"></projectc>
     <projectf v-else></projectf>
   </div>
 </template>

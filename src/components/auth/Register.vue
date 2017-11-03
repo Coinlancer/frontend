@@ -13,18 +13,17 @@
         this.$router.push('/projects');
       }
     },
+    data: function () {
+      return {
+        is_loading: false
+      }
+    },
     methods: {
-      encryptKeypair: function (password) {
-        var params = { keyBytes: 32, ivBytes: 16 };
-        var dk = keythereum.create(params);
-
-        var encryptedData = sjcl.json.encrypt(password, JSON.stringify(dk));
-
-        return btoa(encryptedData);
-      },
       createAccount: function (e) {
         let vm = this;
         e.preventDefault();
+
+        let accepted_types = ['freelancer', 'client'];
 
         let type = e.target.type.value;
         let name = e.target.name.value;
@@ -33,7 +32,26 @@
         let password = e.target.password.value;
         let repassword = e.target.repassword.value;
         let email = e.target.email.value;
-        let cryptopair = vm.encryptKeypair(password);
+
+        if (typeof type == 'undefined' || accepted_types.indexOf(type) == -1) {
+          return vm.$helpers.errorMsg("Select type of account");
+        }
+
+        if (typeof name != 'string' || name.length < 1) {
+          return vm.$helpers.errorMsg("Fill name field");
+        }
+
+        if (typeof surname != 'string' || surname.length < 1) {
+          return vm.$helpers.errorMsg("Fill surname field");
+        }
+
+        if (typeof login != 'string' || login.length < 1) {
+          return vm.$helpers.errorMsg("Fill login field");
+        }
+
+        if (!(/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(email))) {
+          return vm.$helpers.errorMsg("Email has incorrect format");
+        }
 
         if (password.length < 8) {
           return vm.$helpers.errorMsg("Password should have 8 chars min");
@@ -48,6 +66,15 @@
           return vm.$helpers.errorMsg("Passwords should match");
         }
 
+        vm.is_loading = true;
+
+        //create crypt pair
+        var params = { keyBytes: 32, ivBytes: 16 };
+        var crypto_pair = keythereum.create(params);
+
+        let encrypted_crypto_pair = vm.$helpers.encryptKeypair(crypto_pair, password);
+        let crypt_address = keythereum.privateKeyToAddress(crypto_pair.privateKey);
+
         let data = {
           type: type,
           name: name,
@@ -55,15 +82,16 @@
           login: login,
           password: password,
           email: email,
-          cryptopair: cryptopair
+          crypt_pair: encrypted_crypto_pair,
+          crypt_address: crypt_address
         };
 
-        vm.$spinner.push();
+
         return Api.register(data)
             .then((response) => {
               vm.$store.dispatch('setAccountData', response.data.account);
               localStorage.setItem('token', response.data.token);
-              vm.$router.push('/verify')
+              vm.$router.push('/verify');
               return vm.$helpers.successMsg('Verification code was sent on your email');
             })
             .catch((err) => {
@@ -71,7 +99,7 @@
               return vm.$helpers.errorMsg('This email/login is already used');
             })
             .then(() => {
-              vm.$spinner.pop();
+              vm.is_loading = false;
             })
       }
     },
@@ -159,25 +187,13 @@
                   <i class="form-group__bar"></i>
                 </div>
 
-                <button class="btn btn-primary btn-block m-t-10 m-b-10">Send confirmation code</button>
-
-                <div class="top-nav__auth">
-                  <span>or</span>
-
-                  <div>Sign in using</div>
-
-                  <a href="#" class="mdc-bg-blue-500">
-                    <i class="zmdi zmdi-facebook"></i>
-                  </a>
-
-                  <a href="#" class="mdc-bg-cyan-500">
-                    <i class="zmdi zmdi-twitter"></i>
-                  </a>
-
-                  <a href="#" class="mdc-bg-red-400">
-                    <i class="zmdi zmdi-google"></i>
-                  </a>
-                </div>
+                <button-spinner
+                    :isLoading="is_loading"
+                    :disabled="is_loading"
+                    class="btn btn-primary btn-block m-t-10 m-b-10"
+                >
+                  <span>Send confirmation code</span>
+                </button-spinner>
 
               </form>
             </div>

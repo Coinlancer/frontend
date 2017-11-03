@@ -4,6 +4,7 @@ import Router from 'vue-router'
 import Notifications from 'vue-notification'
 import vSelect from 'vue-select'
 import VueButtonSpinner from './components/button-spinner/VueButtonSpinner.vue';
+import myDatepicker from 'vue-datepicker'
 import store from './store'
 import api from './api/api'
 
@@ -15,10 +16,12 @@ import App from './components/App.vue'
 
 //auth
 import Login from './components/auth/Login.vue'
+import Logout from './components/auth/Logout.vue'
 import Register from './components/auth/Register.vue'
 import Verify from './components/auth/Verify.vue'
 
 import Projects from './components/Projects.vue'
+import Freelancers from './components/Freelancers.vue'
 import Project from './components/Project.vue'
 import ProjectSuggestions from './components/ProjectSuggestions.vue'
 import Freelancer from './components/Freelancer.vue'
@@ -29,6 +32,9 @@ import Design from './components/Design.vue'
 //dashboard
 import DashboardProjects from './components/dashboard/Projects.vue'
 import DashboardWorks from './components/dashboard/Works.vue'
+import DashboardSuggestions from './components/dashboard/Suggestions.vue'
+import DashboardFinances from './components/dashboard/Finances.vue'
+import DashboardProfile from './components/dashboard/ProfileSettings.vue'
 // import DashboardCreateProject from './components/dashboard/CreateProject.vue'
 import DashboardEditProject from './components/dashboard/EditProject.vue'
 import DashboardSettings from './components/dashboard/Settings.vue'
@@ -39,6 +45,10 @@ import VuejsDialog from "vuejs-dialog"
 
 import humanize from 'humanize';
 Vue.prototype.$humanize = humanize;
+
+//CONSTS
+// const MAX_FILE_SIZE_IN_BYTES = 10 * 1024 * 1024; //10MB
+const MAX_FILE_SIZE_IN_BYTES = 1024; //10MB
 
 // Install plugins
 Vue.use(Router)
@@ -67,28 +77,27 @@ Vue.use(VuejsDialog, {
 //Add components
 Vue.component('v-select', vSelect)
 Vue.component('button-spinner', VueButtonSpinner)
+Vue.component('date-picker', myDatepicker)
 
+//allow routes
+let allow_routes_name = [
+  'Project',
+  'Projects',
+  'Freelancer',
+  'Freelancers',
+];
+
+//need for routes that are able only for registered users
 const checkSessionLoaded = (to, from, next) => {
+  //temp hack
+  $('.rmd-backdrop--dark').click();
   // Vue.prototype.$spinner.push();
-  function proceed () {
-    if (store.state.session.account.acc_id) {
-      next()
-    }
-  }
   if (!store.state.session.account.acc_id) {
-
-    store.watch(
-        (state) => state.session.account,
-        (value) => {
-          if (value.acc_id) {
-            proceed()
-          }
-        }
-    );
 
     return api.getAccountInfo()
         .then(resp => {
           store.dispatch('setAccountData', resp.data);
+          checkSessionLoaded(to, from, next);
         })
         .catch((err) => {
           console.error(err);
@@ -96,27 +105,78 @@ const checkSessionLoaded = (to, from, next) => {
           return next('/login');
         })
   } else {
-    proceed()
+    if (allow_routes_name.indexOf(to.name) == -1 && to.name != 'Verify' && !store.state.session.account.acc_is_verified) {
+      return next('/verify');
+    }
+
+    checkRoutesAllows(store.state.session.account, to, from, next)
   }
 };
+
+//need for routes that are able for unregistered users
+const checkAccountData = (to, from, next) => {
+  //temp hack
+  $('.rmd-backdrop--dark').click();
+  return api.getAccountInfo()
+      .then(resp => {
+        store.dispatch('setAccountData', resp.data);
+        checkRoutesAllows(resp.data, to, from, next)
+      })
+      .catch((err) => {
+        //thats normal - user are unlogged and will have guest role
+        next();
+      })
+};
+
+function checkRoutesAllows(account, to, from, next) {
+    //temp hack
+  $('.rmd-backdrop--dark').click();
+
+    if (account.acc_id) {
+
+      // check if account is not verified
+      if (allow_routes_name.indexOf(to.name) == -1 && to.name != 'Verify' && !account.acc_is_verified) {
+        return next('/verify');
+      }
+
+      //check if account is already verified
+      if (to.name == 'Verify' && account.acc_is_verified) {
+        return next('/projects');
+      }
+
+      //check if account is already verified
+      if ((to.name == 'Login' || to.name == 'Register') && account.acc_id) {
+        return next('/projects');
+      }
+
+      next()
+  }
+}
 
 // route config
 let routes = [
   //auth
   {
     path: '/login',
-    name: 'login',
+    name: 'Login',
+    beforeEnter: checkAccountData,
     component: Login
   },
   {
+    path: '/logout',
+    name: 'Logout',
+    component: Logout
+  },
+  {
     path: '/design',
-    name: 'design',
+    name: 'Design',
     beforeEnter: checkSessionLoaded,
     component: Design
   },
   {
     path: '/register',
-    name: 'register',
+    name: 'Register',
+    beforeEnter: checkAccountData,
     component: Register
   },
   {
@@ -126,46 +186,70 @@ let routes = [
     component: Verify
   },
   {
+    path: '/freelancers',
+    name: 'Freelancers',
+    beforeEnter: checkAccountData,
+    component: Freelancers
+  },
+  {
     path: '/projects',
     name: 'Projects',
-    beforeEnter: checkSessionLoaded,
+    beforeEnter: checkAccountData,
     component: Projects
   },
   {
     path: '/project/:id',
     name: 'Project',
-    beforeEnter: checkSessionLoaded,
+    beforeEnter: checkAccountData,
     component: Project
   },
   {
     path: '/project/:id/suggestions',
     name: 'ProjectSuggestions',
-    beforeEnter: checkSessionLoaded,
+    beforeEnter: checkAccountData,
     component: ProjectSuggestions
   },
   {
     path: '/freelancer/:id',
-    name: 'freelancer',
-    beforeEnter: checkSessionLoaded,
+    name: 'Freelancer',
+    beforeEnter: checkAccountData,
     component: Freelancer
   },
   {
     path: '/client/:id',
-    name: 'client',
+    name: 'Client',
     beforeEnter: checkSessionLoaded,
     component: Client
   },
   {
     path: '/dashboard/projects',
-    name: 'dashboardProjects',
+    name: 'DashboardProjects',
     beforeEnter: checkSessionLoaded,
     component: DashboardProjects
   },
   {
     path: '/dashboard/works',
-    name: 'dashboardWorks',
+    name: 'DashboardWorks',
     beforeEnter: checkSessionLoaded,
     component: DashboardWorks
+  },
+  {
+    path: '/dashboard/suggestions',
+    name: 'DashboardSuggestions',
+    beforeEnter: checkSessionLoaded,
+    component: DashboardSuggestions
+  },
+  {
+    path: '/dashboard/finances',
+    name: 'DashboardFinances',
+    beforeEnter: checkSessionLoaded,
+    component: DashboardFinances
+  },
+  {
+    path: '/dashboard/profile',
+    name: 'DashboardProfile',
+    beforeEnter: checkSessionLoaded,
+    component: DashboardProfile
   },
   // {
   //   path: '/dashboard/projects/create',

@@ -81,7 +81,7 @@
                             </div>
                             <div class="col-xs-4">
                                 <div class="rmd-stats__item mdc-bg-red-400">
-                                    <h2>1000 CLN</h2>
+                                    <h2>1000 CL</h2>
                                     <small>Price</small>
                                 </div>
                             </div>
@@ -122,7 +122,7 @@
                                                         <input type="checkbox">
                                                         <span class="checkbox__helper"></span><span
                                                             data-editable-target="text-4" class="tasks-list__info">Technical Support<span
-                                                            class="price-project">200 CLN</span>
+                                                            class="price-project">200 CL</span>
                                             </span>
                                                     </label>
                                                 </div>
@@ -156,7 +156,7 @@
                                                         <input type="checkbox">
                                                         <span class="checkbox__helper"></span><span
                                                             data-editable-target="text-5" class="tasks-list__info">Controller and Administration<span
-                                                            class="price-project">300 CLN</span>
+                                                            class="price-project">300 CL</span>
                                             </span>
                                                     </label>
                                                 </div>
@@ -187,7 +187,7 @@
                                                         <input type="checkbox">
                                                         <span class="checkbox__helper"></span><span
                                                             data-editable-target="text-6" class="tasks-list__info">Marketing Communications<span
-                                                            class="price-project">200 CLN</span>
+                                                            class="price-project">200 CL</span>
                                             </span>
                                                     </label>
                                                 </div>
@@ -218,7 +218,7 @@
                                                         <input type="checkbox">
                                                         <span class="checkbox__helper"></span><span
                                                             data-editable-target="text-7" class="tasks-list__info">Product Management<span
-                                                            class="price-project">300 CLN</span>
+                                                            class="price-project">300 CL</span>
                                             </span>
                                                     </label>
                                                 </div>

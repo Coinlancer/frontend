@@ -22,6 +22,7 @@
         sug_isLoading: false,
         categories: null,
         subcategories: null,
+        is_suggestion_exist: false,
         is_owner: false
       }
     },
@@ -38,6 +39,21 @@
         let price = event.target.price ? event.target.price.value : null;
         let hours = event.target.hours ? event.target.hours.value : null;
         let message = event.target.message ? event.target.message.value : null;
+
+        price = parseFloat(price);
+        hours = parseInt(hours);
+
+        if (!price || price <= 0) {
+          return vm.$helpers.errorMsg('Enter suggestion price');
+        }
+
+        if (!hours || price <= 0) {
+          return vm.$helpers.errorMsg('Enter suggestion hours');
+        }
+
+        if (!message || !message.length) {
+          return vm.$helpers.errorMsg('Enter suggestion message');
+        }
 
         return api.createSuggestion(vm.$route.params.id, {
               price: price,
@@ -79,6 +95,15 @@
             vm.category = resp.data.category || null;
             vm.steps = resp.data.steps || [];
             vm.is_owner = (vm.$store.getters.accountData.acc_id === vm.project.acc_id);
+
+            if (vm.account && resp.data.freelancers) {
+              resp.data.freelancers.map(suggestion => {
+                if (suggestion.frl_id == vm.account.frl_id) {
+                  vm.is_suggestion_exist = true;
+                }
+              })
+            }
+
           })
           .catch((err) => {
             console.error(err);
@@ -135,25 +160,10 @@
         <header class="section__title text-left">
           <h2>{{project.prj_title}}</h2>
           <small>{{category.cat_title}} - {{subcategory.sct_title}}</small>
-          <div class="actions actions--section">
-            <div class="actions__toggle">
-              <input type="checkbox">
-              <i class="zmdi zmdi-favorite-outline"></i>
-              <i class="zmdi zmdi-favorite"></i>
-            </div>
-
-            <div class="dropdown">
-              <a href="#" data-toggle="dropdown"><i class="zmdi zmdi-share"></i></a>
-
-              <div class="dropdown-menu pull-right rmd-share">
-                <div></div>
-              </div>
-            </div>
-          </div>
         </header>
 
         <div class="row">
-          <div v-if="project" class="col-md-8">
+          <div v-if="project" :class="is_owner ? 'col-md-12' : 'col-md-8'">
             <div class="card profile">
               <div class="profile__img">
                 <img src="/assets/img/default_user.png" alt="">
@@ -173,12 +183,11 @@
                 <strong><a href="#">{{project.acc_name}} {{project.acc_surname}}</a></strong>
                 <div class="profile__review">
                   <span class="rmd-rate" data-rate-value="3" data-rate-readonly="true"></span>
-                  <span>(263 Review)</span>
                 </div>
                 <ul class="rmd-contact-list">
-                  <li><i class="zmdi zmdi-skype"></i>Skeper_200</li>
-                  <li><i class="zmdi zmdi-phone"></i>308-360-8938</li>
-                  <li><i class="zmdi zmdi-email"></i>malinda@inbound.plus</li>
+                  <li><i v-if="project.acc_skype" class="zmdi zmdi-skype"></i>{{project.acc_skype}}</li>
+                  <li><i v-if="project.acc_phone" class="zmdi zmdi-phone"></i>{{project.acc_phone}}</li>
+                  <li><i v-if="project.acc_email" class="zmdi zmdi-email"></i>{{project.acc_email}}</li>
                 </ul>
               </div>
             </div>
@@ -202,14 +211,15 @@
                       </div>
                       <div class="media-body list-group__text">
                         <strong>{{freelancer.acc_name}} {{freelancer.acc_surname}}</strong>
-                        <small class="list-group__text">+1-202-555-0121</small>
-                        <div class="rmd-rate jq-ry-container" data-rate-value="5" data-rate-readonly="true" readonly="readonly" style="width: 90px;"><div class="jq-ry-group-wrapper"><div class="jq-ry-normal-group jq-ry-group"><!--?xml version="1.0" encoding="utf-8"?--><svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 12.705 512 486.59" x="0px" y="0px" xml:space="preserve" width="18px" height="18px" fill="#eee"><polygon points="256.814,12.705 317.205,198.566 512.631,198.566 354.529,313.435 414.918,499.295 256.814,384.427 98.713,499.295 159.102,313.435 1,198.566 196.426,198.566 "></polygon></svg><!--?xml version="1.0" encoding="utf-8"?--><svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 12.705 512 486.59" x="0px" y="0px" xml:space="preserve" width="18px" height="18px" fill="#eee" style="margin-left: 0px;"><polygon points="256.814,12.705 317.205,198.566 512.631,198.566 354.529,313.435 414.918,499.295 256.814,384.427 98.713,499.295 159.102,313.435 1,198.566 196.426,198.566 "></polygon></svg><!--?xml version="1.0" encoding="utf-8"?--><svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 12.705 512 486.59" x="0px" y="0px" xml:space="preserve" width="18px" height="18px" fill="#eee" style="margin-left: 0px;"><polygon points="256.814,12.705 317.205,198.566 512.631,198.566 354.529,313.435 414.918,499.295 256.814,384.427 98.713,499.295 159.102,313.435 1,198.566 196.426,198.566 "></polygon></svg><!--?xml version="1.0" encoding="utf-8"?--><svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 12.705 512 486.59" x="0px" y="0px" xml:space="preserve" width="18px" height="18px" fill="#eee" style="margin-left: 0px;"><polygon points="256.814,12.705 317.205,198.566 512.631,198.566 354.529,313.435 414.918,499.295 256.814,384.427 98.713,499.295 159.102,313.435 1,198.566 196.426,198.566 "></polygon></svg><!--?xml version="1.0" encoding="utf-8"?--><svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 12.705 512 486.59" x="0px" y="0px" xml:space="preserve" width="18px" height="18px" fill="#eee" style="margin-left: 0px;"><polygon points="256.814,12.705 317.205,198.566 512.631,198.566 354.529,313.435 414.918,499.295 256.814,384.427 98.713,499.295 159.102,313.435 1,198.566 196.426,198.566 "></polygon></svg></div><div class="jq-ry-rated-group jq-ry-group" style="width: 100%;"><!--?xml version="1.0" encoding="utf-8"?--><svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 12.705 512 486.59" x="0px" y="0px" xml:space="preserve" width="18px" height="18px" fill="#fcd461"><polygon points="256.814,12.705 317.205,198.566 512.631,198.566 354.529,313.435 414.918,499.295 256.814,384.427 98.713,499.295 159.102,313.435 1,198.566 196.426,198.566 "></polygon></svg><!--?xml version="1.0" encoding="utf-8"?--><svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 12.705 512 486.59" x="0px" y="0px" xml:space="preserve" width="18px" height="18px" fill="#fcd461" style="margin-left: 0px;"><polygon points="256.814,12.705 317.205,198.566 512.631,198.566 354.529,313.435 414.918,499.295 256.814,384.427 98.713,499.295 159.102,313.435 1,198.566 196.426,198.566 "></polygon></svg><!--?xml version="1.0" encoding="utf-8"?--><svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 12.705 512 486.59" x="0px" y="0px" xml:space="preserve" width="18px" height="18px" fill="#fcd461" style="margin-left: 0px;"><polygon points="256.814,12.705 317.205,198.566 512.631,198.566 354.529,313.435 414.918,499.295 256.814,384.427 98.713,499.295 159.102,313.435 1,198.566 196.426,198.566 "></polygon></svg><!--?xml version="1.0" encoding="utf-8"?--><svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 12.705 512 486.59" x="0px" y="0px" xml:space="preserve" width="18px" height="18px" fill="#fcd461" style="margin-left: 0px;"><polygon points="256.814,12.705 317.205,198.566 512.631,198.566 354.529,313.435 414.918,499.295 256.814,384.427 98.713,499.295 159.102,313.435 1,198.566 196.426,198.566 "></polygon></svg><!--?xml version="1.0" encoding="utf-8"?--><svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 12.705 512 486.59" x="0px" y="0px" xml:space="preserve" width="18px" height="18px" fill="#fcd461" style="margin-left: 0px;"><polygon points="256.814,12.705 317.205,198.566 512.631,198.566 354.529,313.435 414.918,499.295 256.814,384.427 98.713,499.295 159.102,313.435 1,198.566 196.426,198.566 "></polygon></svg></div></div></div>
+                        <small v-if="freelancer.acc_phone" class="list-group__text">{{freelancer.acc_phone}}</small>
+                        <small v-if="freelancer.acc_email" class="list-group__text">{{freelancer.acc_email}}</small>
+                        <!--<div class="rmd-rate jq-ry-container" data-rate-value="5" data-rate-readonly="true" readonly="readonly" style="width: 90px;"><div class="jq-ry-group-wrapper"><div class="jq-ry-normal-group jq-ry-group">&lt;!&ndash;?xml version="1.0" encoding="utf-8"?&ndash;&gt;<svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 12.705 512 486.59" x="0px" y="0px" xml:space="preserve" width="18px" height="18px" fill="#eee"><polygon points="256.814,12.705 317.205,198.566 512.631,198.566 354.529,313.435 414.918,499.295 256.814,384.427 98.713,499.295 159.102,313.435 1,198.566 196.426,198.566 "></polygon></svg>&lt;!&ndash;?xml version="1.0" encoding="utf-8"?&ndash;&gt;<svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 12.705 512 486.59" x="0px" y="0px" xml:space="preserve" width="18px" height="18px" fill="#eee" style="margin-left: 0px;"><polygon points="256.814,12.705 317.205,198.566 512.631,198.566 354.529,313.435 414.918,499.295 256.814,384.427 98.713,499.295 159.102,313.435 1,198.566 196.426,198.566 "></polygon></svg>&lt;!&ndash;?xml version="1.0" encoding="utf-8"?&ndash;&gt;<svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 12.705 512 486.59" x="0px" y="0px" xml:space="preserve" width="18px" height="18px" fill="#eee" style="margin-left: 0px;"><polygon points="256.814,12.705 317.205,198.566 512.631,198.566 354.529,313.435 414.918,499.295 256.814,384.427 98.713,499.295 159.102,313.435 1,198.566 196.426,198.566 "></polygon></svg>&lt;!&ndash;?xml version="1.0" encoding="utf-8"?&ndash;&gt;<svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 12.705 512 486.59" x="0px" y="0px" xml:space="preserve" width="18px" height="18px" fill="#eee" style="margin-left: 0px;"><polygon points="256.814,12.705 317.205,198.566 512.631,198.566 354.529,313.435 414.918,499.295 256.814,384.427 98.713,499.295 159.102,313.435 1,198.566 196.426,198.566 "></polygon></svg>&lt;!&ndash;?xml version="1.0" encoding="utf-8"?&ndash;&gt;<svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 12.705 512 486.59" x="0px" y="0px" xml:space="preserve" width="18px" height="18px" fill="#eee" style="margin-left: 0px;"><polygon points="256.814,12.705 317.205,198.566 512.631,198.566 354.529,313.435 414.918,499.295 256.814,384.427 98.713,499.295 159.102,313.435 1,198.566 196.426,198.566 "></polygon></svg></div><div class="jq-ry-rated-group jq-ry-group" style="width: 100%;">&lt;!&ndash;?xml version="1.0" encoding="utf-8"?&ndash;&gt;<svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 12.705 512 486.59" x="0px" y="0px" xml:space="preserve" width="18px" height="18px" fill="#fcd461"><polygon points="256.814,12.705 317.205,198.566 512.631,198.566 354.529,313.435 414.918,499.295 256.814,384.427 98.713,499.295 159.102,313.435 1,198.566 196.426,198.566 "></polygon></svg>&lt;!&ndash;?xml version="1.0" encoding="utf-8"?&ndash;&gt;<svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 12.705 512 486.59" x="0px" y="0px" xml:space="preserve" width="18px" height="18px" fill="#fcd461" style="margin-left: 0px;"><polygon points="256.814,12.705 317.205,198.566 512.631,198.566 354.529,313.435 414.918,499.295 256.814,384.427 98.713,499.295 159.102,313.435 1,198.566 196.426,198.566 "></polygon></svg>&lt;!&ndash;?xml version="1.0" encoding="utf-8"?&ndash;&gt;<svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 12.705 512 486.59" x="0px" y="0px" xml:space="preserve" width="18px" height="18px" fill="#fcd461" style="margin-left: 0px;"><polygon points="256.814,12.705 317.205,198.566 512.631,198.566 354.529,313.435 414.918,499.295 256.814,384.427 98.713,499.295 159.102,313.435 1,198.566 196.426,198.566 "></polygon></svg>&lt;!&ndash;?xml version="1.0" encoding="utf-8"?&ndash;&gt;<svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 12.705 512 486.59" x="0px" y="0px" xml:space="preserve" width="18px" height="18px" fill="#fcd461" style="margin-left: 0px;"><polygon points="256.814,12.705 317.205,198.566 512.631,198.566 354.529,313.435 414.918,499.295 256.814,384.427 98.713,499.295 159.102,313.435 1,198.566 196.426,198.566 "></polygon></svg>&lt;!&ndash;?xml version="1.0" encoding="utf-8"?&ndash;&gt;<svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 12.705 512 486.59" x="0px" y="0px" xml:space="preserve" width="18px" height="18px" fill="#fcd461" style="margin-left: 0px;"><polygon points="256.814,12.705 317.205,198.566 512.631,198.566 354.529,313.435 414.918,499.295 256.814,384.427 98.713,499.295 159.102,313.435 1,198.566 196.426,198.566 "></polygon></svg></div></div></div>-->
                       </div>
                     </a>
 
                     <div class="media-body">
                       <div class="listings-grid__body">
-                        <small>{{freelancer.prf_hours}} hours | {{freelancer.prf_price}} CLN</small>
+                        <small>{{freelancer.prf_hours}} hours | {{freelancer.prf_price}} CL</small>
                         <h5>{{freelancer.prf_message}}</h5>
                       </div>
                     </div>
@@ -224,8 +234,14 @@
             </div>
           </div>
 
-          <div v-if="suggestion" class="col-md-4 rmd-sidebar-mobile" id="agent-question">
-            <div class="card" style="text-align: center;">
+          <div v-if="!is_owner" class="col-md-4 rmd-sidebar-mobile" id="agent-question">
+            <div v-if="suggestion" class="card" style="text-align: center;">
+              <div class="submit-property__success">
+                <i class="zmdi zmdi-check"></i>
+                <p>Project already active</p>
+              </div>
+            </div>
+            <div v-else-if="is_suggestion_exist" class="card" style="text-align: center;">
               <div class="submit-property__success">
                 <i class="zmdi zmdi-check"></i>
 
@@ -233,24 +249,22 @@
                 <p>You have successfully sent a bid</p>
               </div>
             </div>
-          </div>
-          <div v-else class="col-md-4 rmd-sidebar-mobile" id="agent-question">
-            <form class="card" @submit="createSuggestion">
+            <form v-else class="card" @submit="createSuggestion">
               <div class="card__header">
                 <h2>Suggest an offer</h2>
               </div>
 
               <div class="card__body m-t-10">
                 <div class="form-group form-group--float">
-                  <input type="text" name="price" class="form-control" placeholder="Price">
+                  <input type="number" min="0" required name="price" class="form-control" placeholder="Price">
                   <i class="form-group__bar"></i>
                 </div>
                 <div class="form-group form-group--float">
-                  <input type="text" name="hours" class="form-control" placeholder="Working hours">
+                  <input type="number" min="1" step="1" required name="hours" class="form-control" placeholder="Working hours">
                   <i class="form-group__bar"></i>
                 </div>
                 <div class="form-group form-group--float">
-                  <textarea name="message" class="form-control textarea-autoheight" placeholder="Message"></textarea>
+                  <textarea name="message" required class="form-control textarea-autoheight" placeholder="Message"></textarea>
                   <i class="form-group__bar"></i>
                 </div>
               </div>
@@ -275,7 +289,7 @@
     </section>
 
     <!-- Contact Button for mobile -->
-    <button class="btn btn--action btn--circle visible-sm visible-xs" data-rmd-action="block-open"
+    <button v-if="!is_owner" class="btn btn--action btn--circle visible-sm visible-xs" data-rmd-action="block-open"
             data-rmd-target="#agent-question">
       <i class="zmdi zmdi-comment-alt-text"></i>
     </button>

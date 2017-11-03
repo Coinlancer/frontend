@@ -1,10 +1,15 @@
 <script>
 
-  import Api from '../../api/api'
+  import api from '../../api/api'
 
   import Headerblock from '../partials/Header.vue'
 
   export default {
+    data: function () {
+      return {
+        is_loading: false
+      }
+    },
     methods: {
       confirmAccount: function (e) {
         let vm = this;
@@ -12,15 +17,25 @@
 
         let verification_key = e.target.verification_key.value;
 
+        if (!verification_key) {
+          return vm.$helpers.errorMsg('Enter verification key')
+        }
+
         let data = {
           verification_key: verification_key
         };
 
-        //TODO: validation data
-        vm.$spinner.push();
-        return Api.verifyAccount(data)
-            .then((response) => {
+        vm.is_loading = true;
+        return api.verifyAccount(data)
+            .then(() => {
+              return api.getAccountInfo()
+            })
+            .then(resp => {
+              return vm.$store.dispatch('setAccountData', resp.data);
+            })
+            .then(() => {
               vm.$router.push('/dashboard/settings');
+
               return vm.$helpers.successMsg('Account confirmed');
             })
             .catch((err) => {
@@ -28,7 +43,7 @@
               vm.$helpers.errorMsg('Invalid code');
             })
             .then(() => {
-              vm.$spinner.pop();
+              vm.is_loading = false;
             })
       }
     },
@@ -56,7 +71,13 @@
                   <i class="form-group__bar"></i>
                 </div>
 
-                <button type="submit" class="btn btn-primary btn-block m-t-10 m-b-10">Confirm</button>
+                <button-spinner
+                    :isLoading="is_loading"
+                    :disabled="is_loading"
+                    class="btn btn-primary btn-block m-t-10 m-b-10"
+                >
+                  <span>Confirm</span>
+                </button-spinner>
 
               </form>
             </div>
