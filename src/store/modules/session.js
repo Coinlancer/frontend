@@ -1,4 +1,4 @@
-import api from '../../api/api'
+import Api from '../../api/api'
 import * as types from '../mutation-types'
 
 // initial state

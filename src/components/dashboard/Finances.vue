@@ -1,87 +1,103 @@
 <script>
-
-  import api from '../../api/api'
+  import Api from '../../api/api'
   import Headerblock from '../partials/Header.vue'
   import Sidebar from './partials/Sidebar.vue'
   import Config from '../../config/index'
-  import Tx from 'ethereumjs-tx'
+
   import keythereum from 'keythereum'
+  import sjcl from 'sjcl'
+  import Tx from 'ethereumjs-tx';
 
   export default {
     data: function () {
       return {
+        allow_is_loading: false,
+        popupVisible: false,
         account: [],
-        balance: 0,
-        current_role: null,
+        balance_eth: 0,
+        balance_cl: 0,
+        allowance: 0,
+        current_role: null
       }
     },
     methods: {
+      showPopup: function (e) {
+        let vm = this;
+        e.preventDefault();
+        vm.$modal.show('allowance');
+      },
 
+      allowForEscrow: function (e) {
+        let vm = this;
+        e.preventDefault();
+
+        vm.allow_is_loading = true;
+        let amount = e.target.amount.value;
+        let password = e.target.password.value;
+
+        if (!amount || amount < 1) {
+          vm.allow_is_loading = false;
+          return vm.$helpers.errorMsg('Bad amount');
+        }
+
+        let crypto_pair = atob(vm.account.acc_crypt_pair);
+        let decrypted_data = null;
+        try {
+          decrypted_data = JSON.parse(sjcl.json.decrypt(password, crypto_pair));
+        } catch (err) {
+          console.error(err);
+          vm.allow_is_loading = false;
+          return vm.$helpers.errorMsg('Invalid password');
+        }
+
+        var count = Config.web3.eth.getTransactionCount(vm.account.acc_crypt_address);
+        var gasPrice = 21000000000;
+        var gasLimit = 100000;
+
+        var tx = new Tx({
+          "from": vm.account.acc_crypt_address,
+          "nonce": Config.web3.toHex(count),
+          "gasPrice": Config.web3.toHex(gasPrice),
+          "gasLimit": Config.web3.toHex(gasLimit),
+          "to": Config.cl_contract_address,
+          "data": Config.contract.approve.getData(Config.escrow_contract_address, Config.web3.toWei(amount), {from: vm.account.acc_crypt_address}),
+          "chainId": Config.chainId
+        });
+
+        tx.sign(new Buffer(decrypted_data.privateKey, 'hex'));
+
+        var serializedTx = tx.serialize();
+
+        Config.web3.eth.sendRawTransaction('0x' + serializedTx.toString('hex'), function(err, hash) {
+          if (err) {
+            console.log(err);
+            vm.allow_is_loading = false;
+            vm.$modal.hide('allowance');
+            vm.$helpers.errorMsg('Error while trying to add allowance')
+          } else {
+            console.log(hash);
+            vm.allow_is_loading = false;
+            vm.$modal.hide('allowance');
+            vm.$helpers.successMsg('Allowance will be added after mining')
+          }
+        });
+
+      }
     },
-    created () {
+    created() {
       let vm = this;
       vm.account = vm.$store.getters.accountData;
       vm.current_role = vm.$helpers.getCurrentRole(vm.account);
-    },
-    beforeCreate () {
-      let vm = this;
-      vm.account = vm.$store.getters.accountData;
-      vm.current_role = vm.$helpers.getCurrentRole(vm.account);
-
-      Config.web3.eth.getBalance(vm.account.acc_crypt_address)
-          .then(balance => {
-            vm.balance = Config.web3.utils.fromWei(balance, "ether");
-          });
-
-//      let private_key = '89eeaf0b3060c01acdb86b8379d1eb8ca111b3f666a37b1ea7683b2ad016c565';
-//
-//      Config.web3.eth.getTransactionCount('0x19f99076d5fafc9b55cd594498ac688e2b1e24b9')
-//        .then(txCount => {
-//
-//          let from = '0x19f99076d5fafc9b55cd594498ac688e2b1e24b9';
-//
-//          let tx = new Tx({
-//            nonce: txCount,
-//            gasPrice: Config.web3.utils.toHex(21000),
-//            gasLimit: Config.web3.utils.toHex(121000),
-//            value: Config.web3.utils.toHex(0),
-//            from,
-//            data: Config.contract.methods
-//                .setAddresses(1, '0x1b256c5c8e7ccb14ebb872a6565a70f4f613f010', '0x3cdc6716ffdc8a784a309256351d33fb844a0e34').encodeABI(),
-//          });
-//
-//          let pk = new Buffer(private_key, 'hex');
-//          tx.sign(pk);
-//
-//          return Config.web3.eth.sendSignedTransaction('0x' + tx.serialize().toString('hex'));
-//        })
-//        .then(resp => {
-//          console.log(resp);
-//          Config.contract.methods.addresses(1 ,0).call({from: '0x19f99076d5fafc9b55cd594498ac688e2b1e24b9'}, function(error, result) {
-//            if (error) {
-//              console.error(error);
-//            }
-//            console.log(result);
-//          });
-//        })
-//
-//      Config.contract.methods
-//          .setAddresses(1, '0x1b256c5c8e7ccb14ebb872a6565a70f4f613f010', '0x3cdc6716ffdc8a784a309256351d33fb844a0e34')
-//          .send({from: '0x19f99076d5fafc9b55cd594498ac688e2b1e24b9'}, function(error, result) {
-//            if (error) {
-//              console.error(error);
-//            }
-//            console.log(result);
-//            console.log(Config.contract.methods.addresses(1, 0));
-//      });
-
+      vm.balance_eth = Config.web3.fromWei(Config.web3.eth.getBalance(vm.account.acc_crypt_address).toNumber());
+      vm.balance_cl = Config.web3.fromWei(Config.contract.balanceOf(vm.account.acc_crypt_address).toNumber());
+      vm.allowance = Config.web3.fromWei(Config.contract.allowance(vm.account.acc_crypt_address, Config.escrow_contract_address).toNumber());
     },
     mounted () {
       this.$helpers.externalPluginsExecute();
     },
     components: {
       Headerblock,
-      Sidebar,
+      Sidebar
     }
   }
 </script>
@@ -89,7 +105,27 @@
 <template>
   <div>
     <headerblock fullwidth="true"></headerblock>
+    <modal name="allowance">
+      <form style="padding: 50px;" class="tab-pane fade active in" @submit="allowForEscrow">
+        <div class="form-group">
+          <input type="number" min="1" class="form-control" name="amount" value="" placeholder="Amount of allowance">
+          <i class="form-group__bar"></i>
+        </div>
 
+        <div class="form-group">
+          <input type="password" class="form-control" name="password" value="" placeholder="Password">
+          <i class="form-group__bar"></i>
+        </div>
+
+        <button-spinner
+            :isLoading="allow_is_loading"
+            :disabled="allow_is_loading"
+            class="btn btn-primary btn-block m-t-10 m-b-10"
+        >
+          <span>Allow</span>
+        </button-spinner>
+      </form>
+    </modal>
     <main id="main">
       <sidebar :role="current_role"></sidebar>
       <section id="main__content">
@@ -106,8 +142,22 @@
                     <h4>Your address is <span>{{account.acc_crypt_address}}</span></h4>
                   </div>
                   <div class="balance-block">
-                    <h2>Balance</h2>
-                    <h4>Your balance is <span>{{balance}} CL</span></h4>
+                    <h2>Balances</h2>
+                    <h4>CL: <span>{{balance_cl}}</span></h4>
+                    <h4>ETH: <span>{{balance_eth}}</span></h4>
+                  </div>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-6">
+                  <div class="balance-block">
+                    <h2>Allowance for Coinlancer Escrow</h2>
+                    <h4>CL: <span>{{allowance}}</span></h4>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="balance-button">
+                    <button @click="showPopup">Allow</button>
                   </div>
                 </div>
               </div>

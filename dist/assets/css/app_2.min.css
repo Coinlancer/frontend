@@ -1531,7 +1531,7 @@
     padding: 0 8px 0 3px
 }
 
-.profile__img > img {
+.profile__img img {
     width: 208px;
     float: left;
     border: 5px solid #fff
@@ -1553,7 +1553,7 @@
         margin: -35px 0 0 -65px
     }
 
-    .profile__img > img {
+    .profile__img img {
         width: 130px;
         border-radius: 50%;
         box-shadow: 0 -1px 15px rgba(0, 0, 0, .09)
@@ -3164,7 +3164,7 @@ html:not(.ie9) .page-loader__spinner {
 }
 
 .tasks-lists .list-group-item .checkbox input:checked + .checkbox__helper + * {
-    text-decoration: line-through
+    /*text-decoration: line-through;   */
 }
 
 .tasks-lists .list-group__attrs {

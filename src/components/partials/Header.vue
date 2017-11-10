@@ -1,4 +1,6 @@
 <script>
+  import Config from '../../config/index'
+
   export default {
     props: ['fullwidth'],
     data: function () {
@@ -6,6 +8,8 @@
       let account = vm.$store.state.session.account;
 
       return {
+        homepage: Config.home_page,
+        api_host: Config.api_host,
         account: account
       }
     }
@@ -27,7 +31,8 @@
       </li>
       <li class="header-alt__profile dropdown">
         <a href="" data-toggle="dropdown">
-          <img src="/assets/img/demo/people/2.jpg" alt="">
+          <img v-if="account.acc_avatar" :src="api_host + '/' + account.acc_avatar" alt=""/>
+          <img v-else src="/assets/img/icons/avatar.png" alt=""/>
         </a>
 
         <ul class="dropdown-menu pull-right">
@@ -47,7 +52,8 @@
             </li>
             <li class="header-alt__profile dropdown">
               <a href="" data-toggle="dropdown">
-                <img src="/assets/img/demo/people/2.jpg" alt="">
+                <img v-if="account.acc_avatar" :src="api_host + '/' + account.acc_avatar" alt=""/>
+                <img v-else src="/assets/img/icons/avatar.png" alt=""/>
               </a>
 
               <ul class="dropdown-menu pull-right">
@@ -80,7 +86,7 @@
 
     <div class="header__main">
       <div class="container">
-        <a class="logo" href="#">
+        <a class="logo" :href="homepage">
           <img src="/assets/img/logo2.png" alt="">
           <div class="logo__text">
             <span>Coinlancer</span>

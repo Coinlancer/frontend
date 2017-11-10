@@ -1,5 +1,5 @@
 <script>
-  import api from '../api/api'
+  import Api from '../api/api'
 
   export default {
     name: "app"

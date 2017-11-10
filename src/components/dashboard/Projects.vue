@@ -1,29 +1,50 @@
 <script>
 
-  import api from '../../api/api'
+  import Api from '../../api/api'
+  import Config from '../../config/index'
   import Headerblock from '../partials/Header.vue'
   import Sidebar from './partials/Sidebar.vue'
 
   export default {
     data: function () {
       return {
+        account: null,
         current_role: null,
-        projects: []
+        projects: [],
+        //pagination
+        projects_page: 1,
+        is_next_page_exist: true
       }
     },
     methods: {
+      loadMoreProjects: function () {
+        let vm = this;
+        vm.projects_page += 1;
+
+        let filters = {
+          limit: Config.limits.dashboard_projects,
+          offset: (vm.projects_page - 1) * Config.limits.dashboard_projects
+        };
+
+        return Api.getClientProjects(vm.account.acc_id, filters)
+            .then((resp) => {
+              if (resp.data.length < Config.limits.dashboard_projects) {
+                vm.is_next_page_exist = false;
+              }
+              vm.projects = vm.projects.concat(resp.data);
+            })
+            .catch(vm.$errors.handle)
+      },
+
       createProject: function () {
         let vm = this;
         vm.$spinner.push();
-        return api.createProject()
+        return Api.createProject()
             .then((resp) => {
               console.log(resp);
               vm.$router.push('/dashboard/projects/edit/' + resp.data.prj_id);
             })
-            .catch((err) => {
-              console.log(err);
-              vm.$helpers.errorMsg('Can not create project')
-            })
+            .catch(vm.$errors.handle)
             .then(() => {
               vm.$spinner.pop();
             })
@@ -31,11 +52,22 @@
     },
     created () {
       let vm = this;
-      let account = vm.$store.getters.accountData;
-      vm.current_role = vm.$helpers.getCurrentRole(account);
-      vm.$store.dispatch('getClientProjects', account.acc_id).then(() => {
-        vm.projects = vm.$store.getters.clientProjects;
-      })
+      vm.account = vm.$store.getters.accountData;
+      vm.current_role = vm.$helpers.getCurrentRole(vm.account);
+
+      let filters = {
+        limit: Config.limits.dashboard_projects,
+        offset: (vm.projects_page - 1) * Config.limits.dashboard_projects
+      };
+
+      Api.getClientProjects(vm.account.acc_id, filters)
+          .then((resp) => {
+            if (resp.data.length < Config.limits.dashboard_suggestions) {
+              vm.is_next_page_exist = false;
+            }
+            vm.projects = resp.data
+          })
+          .catch(vm.$errors.handle)
     },
     mounted () {
       this.$helpers.externalPluginsExecute();
@@ -65,7 +97,7 @@
 
               <div v-for="project in projects" class="listings-grid__item">
                   <div class="media-body">
-                    <router-link :to="'/dashboard/projects/edit/' + project.prj_id" class="media">
+                    <router-link :to="project.prj_title ? '/project/' + project.prj_id : '/dashboard/projects/edit/' + project.prj_id" class="media">
                       <div class="listings-grid__body">
                         <h3>{{project.prj_title}}</h3>
                         <p>
@@ -88,6 +120,9 @@
                       <!--<li><span class="label label-danger">Delete</span></li>-->
                     </ul>
                   </div>
+              </div>
+              <div v-if="is_next_page_exist" class="load-more m-b-30">
+                <a @click="loadMoreProjects"><i class="zmdi zmdi-refresh-alt"></i> Load more</a>
               </div>
             </div>
             <div v-else>

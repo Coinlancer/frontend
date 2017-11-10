@@ -1,6 +1,8 @@
 const webpack = require('webpack');
 const path = require('path');
 
+const Dotenv = require('dotenv-webpack');
+
 module.exports = {
     entry: './src/main.js',
     output: {
@@ -37,5 +39,10 @@ module.exports = {
     },
     node: {
         fs: "empty"
-    }
+    },
+    plugins: [
+        new Dotenv({
+            path: './.env', // Path to .env file (this is the default)
+        })
+    ]
 }

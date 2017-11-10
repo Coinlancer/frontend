@@ -1,4 +1,4 @@
-import api from '../../api/api'
+import Api from '../../api/api'
 import * as types from '../mutation-types'
 
 // initial state
@@ -14,7 +14,7 @@ const getters = {
 // actions
 const actions = {
   getAllSkills ({ commit }) {
-    return api.getSkills().then(response => {
+    return Api.getSkills().then(response => {
       let data = response.data;
       commit(types.RECEIVE_SKILLS, { data })
     })

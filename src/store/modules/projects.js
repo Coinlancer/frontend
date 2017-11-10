@@ -1,4 +1,4 @@
-import api from '../../api/api'
+import Api from '../../api/api'
 import * as types from '../mutation-types'
 
 // initial state
@@ -22,19 +22,19 @@ const getters = {
 // actions
 const actions = {
   getProjects ({ commit }, filters) {
-    return api.getProjects(filters).then(response => {
+    return Api.getProjects(filters).then(response => {
       let data = response.data;
       commit(types.RECEIVE_PROJECTS, { data })
     })
   },
   getClientProjects ({ commit }, client_id) {
-    return api.getClientProjects(client_id).then(response => {
+    return Api.getClientProjects(client_id).then(response => {
       let data = response.data;
       commit(types.RECEIVE_CLIENT_PROJECTS, { data })
     })
   },
   getFreelancerProjects ({ commit }, freelancer_id) {
-    return api.getFreelancerProjects(freelancer_id).then(response => {
+    return Api.getFreelancerProjects(freelancer_id).then(response => {
       let data = response.data;
       commit(types.RECEIVE_FREELANCER_PROJECTS, { data })
     })

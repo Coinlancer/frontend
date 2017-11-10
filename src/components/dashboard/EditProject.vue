@@ -1,12 +1,12 @@
 <script>
-  import api from '../../api/api'
+  import Api from '../../api/api'
   import { mapGetters } from 'vuex'
   import Headerblock from '../partials/Header.vue'
   import Sidebar from './partials/Sidebar.vue'
 
   import pretty from 'prettysize'
   import moment from 'moment'
-  import config from '../../config/index'
+  import Config from '../../config/index'
 
   export default {
     data: function () {
@@ -68,7 +68,7 @@
     beforeCreate: function () {
       let vm = this;
 
-      return api.getProjectData(vm.$route.params.id)
+      return Api.getProjectData(vm.$route.params.id)
           .then(resp => {
 
             vm.account = vm.$store.getters.accountData;
@@ -141,7 +141,7 @@
 
           })
           .catch((err) => {
-            console.error(err);
+            vm.$errors.handle(err)
             vm.$router.push('/dashboard/projects')
           })
     },
@@ -183,17 +183,17 @@
         if (e.target.files) {
           for (var i = 0; i < e.target.files.length; i++) {
             let file = e.target.files[i];
-            if (file.size > config.MAX_FILE_SIZE_IN_BYTES) {
-              vm.$helpers.errorMsg('File ' + file.name + ' is too big. Limit is ' + vm.$humanize.filesize(config.MAX_FILE_SIZE_IN_BYTES));
+            if (file.size > Config.MAX_FILE_SIZE_IN_BYTES) {
+              vm.$helpers.errorMsg('File ' + file.name + ' is too big. Limit is ' + vm.$humanize.filesize(Config.MAX_FILE_SIZE_IN_BYTES));
             } else {
 
-              api.addAttachment(vm.$route.params.id, file)
+              Api.addAttachment(vm.$route.params.id, file)
                 .then((resp) => {
                   vm.attachments.push(resp.data);
                 })
                 .catch((err) => {
-                  console.error(err);
                   vm.$helpers.errorMsg('Can not add attachment ' + file.name);
+                  vm.$errors.handle(err);
                 })
                 .then(() => {
                   e.target.value = '';
@@ -215,7 +215,7 @@
 
         vm.del_attach_is_loading = true;
 
-        return api.deleteAttachment(vm.$route.params.id, attachment_id)
+        return Api.deleteAttachment(vm.$route.params.id, attachment_id)
             .then(() => {
               //todo remove after getAttachments method will added
               console.log(vm.attachments);
@@ -226,8 +226,8 @@
               })
             })
             .catch((err) => {
-              console.error(err);
               vm.$helpers.errorMsg('Can not delete attachment ' + file.name);
+              vm.$errors.handle(err);
             })
             .then(() => {
               vm.del_attach_is_loading = false;
@@ -242,11 +242,11 @@
 
         if (attachment_id) {
           //temporary hack
-          let url = config.api_host + '/projects/' + vm.$route.params.id + '/attachments/' + attachment_id;
+          let url = Config.api_host + '/projects/' + vm.$route.params.id + '/attachments/' + attachment_id;
           var win = window.open(url, '_blank');
 
           return win.focus();
-          //return api.downloadAttachment(vm.$route.params.id, attachment_id);
+          //return Api.downloadAttachment(vm.$route.params.id, attachment_id);
         }
       },
 
@@ -319,7 +319,7 @@
 
       getSteps: function () {
         let vm = this;
-        return api.getSteps(vm.$route.params.id)
+        return Api.getSteps(vm.$route.params.id)
             .then((resp) => {
               console.log(resp);
               vm.steps = [];
@@ -335,10 +335,7 @@
                 })
               }
             })
-            .catch((err) => {
-              console.error(err);
-              vm.$helpers.errorMsg('Can not load project steps');
-            })
+            .catch(vm.$errors.handle)
       },
 
       saveStep: function (index, e) {
@@ -355,7 +352,7 @@
           description: vm.steps[index].description
         };
 
-        return api.saveStep(vm.$route.params.id, data)
+        return Api.saveStep(vm.$route.params.id, data)
             .then((resp) => {
               console.log(resp);
               return vm.getSteps();
@@ -363,17 +360,14 @@
             .then((resp) => {
               vm.$helpers.successMsg('Step saved');
             })
-            .catch((err) => {
-              console.error(err);
-              vm.$helpers.errorMsg('Can not save step');
-            })
+            .catch(vm.$errors.handle)
       },
 
       deleteStep: function (index, e) {
         e.preventDefault();
         let vm = this;
 
-        return api.deleteStep(vm.$route.params.id, vm.steps[index].id)
+        return Api.deleteStep(vm.$route.params.id, vm.steps[index].id)
             .then((resp) => {
               console.log(resp);
               return vm.getSteps();
@@ -381,10 +375,7 @@
             .then((resp) => {
               vm.$helpers.successMsg('Step deleted');
             })
-            .catch((err) => {
-              console.error(err);
-              vm.$helpers.errorMsg('Can not delete step');
-            })
+            .catch(vm.$errors.handle)
       },
 
       updateProject: function (e) {
@@ -411,6 +402,10 @@
           return vm.$helpers.errorMsg('Select project category and subcategory');
         }
 
+        if (!vm.steps.length) {
+          return vm.$helpers.errorMsg('Add at least one step');
+        }
+
         vm.$spinner.push();
 
         let data = {
@@ -421,15 +416,12 @@
           subcategory_id: vm.selected_child_category.value,
         };
 
-        return api.updateProject(vm.$route.params.id, data)
+        return Api.updateProject(vm.$route.params.id, data)
             .then(() => {
               vm.$router.push('/dashboard/projects');
               return vm.$helpers.successMsg('Project updated');
             })
-            .catch((err) => {
-              console.error(err);
-              vm.$helpers.errorMsg('Cannot update project. Check fields');
-            })
+            .catch(vm.$errors.handle)
             .then(() => {
               vm.$spinner.pop();
             })
@@ -471,7 +463,8 @@
           skill_id: skill_id
         };
 
-        return api.addSkill(vm.$route.params.id, data);
+        return Api.addSkill(vm.$route.params.id, data)
+            .catch(vm.$errors.handle);
       },
 
       deleteSkill: function (skill_id) {
@@ -481,7 +474,8 @@
           skill_id: skill_id
         };
 
-        return api.deleteSkill(vm.$route.params.id, data);
+        return Api.deleteSkill(vm.$route.params.id, data)
+            .catch(vm.$errors.handle);
       },
     },
     mounted () {

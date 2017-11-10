@@ -6,8 +6,13 @@
 
   export default {
     beforeCreate: function () {
-      if (!!this.$store.state.session.account.acc_id) {
-        this.$router.push('/projects');
+      if (this.$store.state.session.account.acc_id) {
+
+        if (!this.$store.state.session.account.acc_is_verified) {
+          return this.$router.push('/verify');
+        }
+
+        return this.$router.push('/projects');
       }
     },
     data: function () {
@@ -20,15 +25,15 @@
         let vm = this;
         e.preventDefault();
 
-        let email = e.target.email.value;
+        let identificator = e.target.identificator.value;
         let password = e.target.password.value;
 
-        if (!(/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(email))) {
-          return vm.$helpers.errorMsg("Email has incorrect format");
+        if (!identificator.length) {
+          return vm.helpers.errorMsg('Enter email or login');
         }
 
         let data = {
-          email: email,
+          identificator: identificator,
           password: password
         };
 
@@ -46,10 +51,7 @@
                 vm.$router.push('/verify');
               }
             })
-            .catch((err) => {
-              console.error(err);
-              vm.$helpers.errorMsg('Invalid email/password');
-            })
+            .catch(vm.$errors.handle)
             .then(() => {
               vm.is_loading = false;
             })
@@ -76,7 +78,7 @@
             <div class="card__body">
               <form class="tab-pane fade active in" @submit="login">
                 <div class="form-group">
-                  <input type="text" class="form-control" name="email" value="" placeholder="Email Address">
+                  <input type="text" class="form-control" name="identificator" value="" placeholder="Email or login">
                   <i class="form-group__bar"></i>
                 </div>
 

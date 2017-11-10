@@ -27,6 +27,10 @@ const Helpers = {
                 return btoa(encryptedData);
             },
 
+            formatPhone: function (phone) {
+                return Vue.prototype.$phoneformatter.format(phone, '+N (NNN) ' + Array(phone.length - 4 + 1).join("N"), {normalize: true});
+            },
+
             externalPluginsExecute: function () {
 
                 $(document).ready(function () {

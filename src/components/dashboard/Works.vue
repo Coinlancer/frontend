@@ -1,6 +1,7 @@
 <script>
 
-  import api from '../../api/api'
+  import Api from '../../api/api'
+  import Config from '../../config/index'
   import Headerblock from '../partials/Header.vue'
   import Sidebar from './partials/Sidebar.vue'
 
@@ -8,15 +9,49 @@
     data: function () {
       return {
         current_role: null,
-        projects: []
+        projects: [],
+        //pagination
+        projects_page: 1,
+        is_next_page_exist: true
       }
+    },
+    methods: {
+      loadMoreWorks: function () {
+        let vm = this;
+        vm.projects_page += 1;
+
+        let filters = {
+          limit: Config.limits.dashboard_works,
+          offset: (vm.projects_page - 1) * Config.limits.dashboard_works
+        };
+
+        return Api.getFreelancerProjects(filters)
+            .then((resp) => {
+                if (resp.data.length < Config.limits.dashboard_works) {
+                  vm.is_next_page_exist = false;
+                }
+                vm.projects = vm.projects.concat(resp.data);
+              })
+            .catch(vm.$errors.handle)
+      },
     },
     created () {
       let vm = this;
-      vm.$store.dispatch('getFreelancerProjects').then(() => {
-        vm.projects = vm.$store.getters.freelancerProjects;
-      })
       vm.current_role = vm.$helpers.getCurrentRole(vm.$store.getters.accountData);
+
+      let filters = {
+        limit: Config.limits.dashboard_works,
+        offset: (vm.projects_page - 1) * Config.limits.dashboard_works
+      };
+
+      return Api.getFreelancerProjects(filters)
+          .then((resp) => {
+              if (resp.data.length < Config.limits.dashboard_works) {
+                vm.is_next_page_exist = false;
+              }
+              vm.projects = resp.data
+            })
+          .catch(vm.$errors.handle)
     },
     mounted () {
       this.$helpers.externalPluginsExecute();
@@ -59,6 +94,9 @@
                   </router-link>
                   <button class="disabled btn btn-xs btn-success m-t-10 m-b-10 m-l-20">Active</button>
                 </div>
+              </div>
+              <div v-if="is_next_page_exist" class="load-more m-b-30">
+                <a @click="loadMoreWorks"><i class="zmdi zmdi-refresh-alt"></i> Load more</a>
               </div>
             </div>
             <div v-else>

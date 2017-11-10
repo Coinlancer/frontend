@@ -1,6 +1,6 @@
 <script>
 
-  import api from '../../api/api'
+  import Api from '../../api/api'
   import Headerblock from '../partials/Header.vue'
   import Sidebar from './partials/Sidebar.vue'
 
@@ -64,11 +64,11 @@
           crypt_pair: encrypted_crypto_pair
         };
 
-        return api.updateAccountPassword(data)
+        return Api.updateAccountPassword(data)
             .then((resp) => {
               console.log(resp);
 
-              return api.getAccountInfo()
+              return Api.getAccountInfo()
             })
             .then(resp => {
               vm.$store.dispatch('setAccountData', resp.data);
@@ -76,11 +76,7 @@
 
               return vm.$helpers.successMsg('Password changed');
             })
-            .catch((err) => {
-              console.error(err);
-
-              return vm.$helpers.errorMsg('Can not change password');
-            })
+            .catch(vm.$errors.handle)
             .then(() => {
               vm.pass_is_loading = false;
             })
@@ -99,9 +95,9 @@
           role: role
         };
 
-        return api.activateRole(data)
+        return Api.activateRole(data)
             .then(() => {
-              return api.getAccountInfo()
+              return Api.getAccountInfo()
             })
             .then(resp => {
               vm.$store.dispatch('setAccountData', resp.data);
@@ -110,10 +106,7 @@
             .then(() => {
               vm.$helpers.successMsg('Role activated');
             })
-            .catch((err) => {
-              console.error(err);
-              vm.$helpers.errorMsg('Can not activate role');
-            })
+            .catch(vm.$errors.handle)
             .then(() => {
               vm.act_is_loading = false;
             })

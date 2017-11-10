@@ -1,22 +1,29 @@
 <script>
-  import api from '../api/api'
+  import Api from '../api/api'
+  import Config from '../config/index'
   import Headerblock from './partials/Header.vue'
 
   export default {
     data: function () {
       return {
-        freelancer: null
+        freelancer: null,
+        api_host: Config.api_host
       }
     },
-    beforeCreate: function () {
+    created: function () {
       let vm = this;
 
-      return api.getFreelancerData(vm.$route.params.id)
+      vm.$spinner.push();
+      return Api.getFreelancerData(vm.$route.params.id)
         .then(resp => {
           vm.freelancer = resp.data;
         })
-        .catch(() => {
+        .catch((err) => {
+          vm.$errors.handle(err);
           vm.$router.push('/projects')
+        })
+        .then(() => {
+          vm.$spinner.pop();
         })
     },
     components: {
@@ -29,7 +36,7 @@
   <div>
     <headerblock></headerblock>
 
-    <section class="section">
+    <section class="section" v-if="freelancer">
       <div class="container">
         <header class="section__title text-left">
           <h2>{{freelancer.acc_name}} {{freelancer.acc_surname}}</h2>
@@ -40,7 +47,8 @@
           <div class="col-md-12">
             <div class="card profile">
               <div class="profile__img">
-                <img src="/assets/img/default_user.png" alt="" />
+                <img v-if="freelancer.acc_avatar" :src="api_host + '/' + freelancer.acc_avatar" alt=""/>
+                <img v-else src="/assets/img/icons/avatar.png" alt=""/>
               </div>
 
               <div class="profile__info">
@@ -52,7 +60,7 @@
 
                 <ul class="rmd-contact-list">
                   <li v-if="freelancer.acc_skype"><i class="zmdi zmdi-skype"></i>{{freelancer.acc_skype}}</li>
-                  <li v-if="freelancer.acc_phone"><i class="zmdi zmdi-phone"></i>{{freelancer.acc_phone}}</li>
+                  <li v-if="freelancer.acc_phone"><i class="zmdi zmdi-phone"></i>{{$helpers.formatPhone(freelancer.acc_phone)}}</li>
                   <li v-if="freelancer.acc_email"><i class="zmdi zmdi-email"></i>{{freelancer.acc_email}}</li>
                 </ul>
               </div>
@@ -86,7 +94,7 @@
 
                 </div>
 
-                <div class="card__sub">
+                <div v-if="freelancer.acc_description" class="card__sub">
                   <h4>About {{freelancer.acc_name}} {{freelancer.acc_surname}}</h4>
                   {{freelancer.acc_description}}
                 </div>
@@ -97,23 +105,9 @@
 
                     <div v-for="skill in freelancer.skills" class="list-group-item clearfix">
                       <div class="pull-left text-muted">{{skill.skl_title}}</div>
-                      <!--<div class="pull-right"><strong class="text-strong">6 Year</strong></div>-->
                     </div>
                   </div>
                 </div>
-
-                <!--<div class="card__sub">
-                    <h4>Contact Information</h4>
-
-                    <ul class="rmd-contact-list">
-                        <li><i class="zmdi zmdi-phone"></i>308-360-8938</li>
-                        <li><i class="zmdi zmdi-email"></i>robertbosborne@inbound.plus</li>
-                        <li><i class="zmdi zmdi-facebook"></i>robertbosborne</li>
-                        <li><i class="zmdi zmdi-twitter"></i>@robertbosborne</li>
-                        <li><i class="zmdi zmdi-pin"></i>5470 Madison Street Severna Park, MD 21146</li>
-                    </ul>
-                </div>
-                -->
               </div>
             </div>
           </div>

@@ -1,6 +1,6 @@
 <script>
 
-  import api from '../../api/api'
+  import Api from '../../api/api'
 
   import Headerblock from '../partials/Header.vue'
 
@@ -8,6 +8,15 @@
     data: function () {
       return {
         is_loading: false
+      }
+    },
+    beforeCreate: function () {
+      if (!this.$store.state.session.account.acc_id) {
+        return this.$router.push('/login');
+      }
+
+      if (this.$store.state.session.account.acc_is_verified) {
+        return this.$router.push('/projects');
       }
     },
     methods: {
@@ -26,9 +35,9 @@
         };
 
         vm.is_loading = true;
-        return api.verifyAccount(data)
+        return Api.verifyAccount(data)
             .then(() => {
-              return api.getAccountInfo()
+              return Api.getAccountInfo()
             })
             .then(resp => {
               return vm.$store.dispatch('setAccountData', resp.data);
@@ -38,10 +47,7 @@
 
               return vm.$helpers.successMsg('Account confirmed');
             })
-            .catch((err) => {
-              console.error(err);
-              vm.$helpers.errorMsg('Invalid code');
-            })
+            .catch(vm.$errors.handle)
             .then(() => {
               vm.is_loading = false;
             })

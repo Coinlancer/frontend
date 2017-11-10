@@ -1,6 +1,7 @@
 <script>
 
-  import api from '../../api/api'
+  import Api from '../../api/api'
+  import Config from '../../config/index'
   import Headerblock from '../partials/Header.vue'
   import Sidebar from './partials/Sidebar.vue'
 
@@ -12,10 +13,38 @@
         current_role: null,
         info_is_loading: false,
         selected_skills: [],
-        last_selected_skills_ids: [],
+        last_selected_skills_ids: [], //required for get difference between existed and added/removed skills,
+        api_host: Config.api_host
       }
     },
     methods: {
+      onUploadAvatar: function (e) {
+        let vm = this;
+        e.preventDefault();
+
+        if (e.target.files && e.target.files[0]) {
+          let file = e.target.files[0];
+
+          if (file.size > Config.MAX_FILE_SIZE_IN_BYTES) {
+            vm.$helpers.errorMsg('File ' + file.name + ' is too big. Limit is ' + vm.$humanize.filesize(Config.MAX_FILE_SIZE_IN_BYTES));
+          } else {
+
+            return Api.uploadAvatar(file)
+                .then(() => {
+                  return Api.getAccountInfo();
+                })
+                .then((resp) => {
+                  vm.$store.dispatch('setAccountData', resp.data);
+                  vm.account = vm.$store.getters.accountData;
+                })
+                .catch(vm.$errors.handle)
+                .then(() => {
+                  e.target.value = '';
+                })
+          }
+        }
+      },
+
       updateAccountInformation: function (e) {
         let vm = this;
         e.preventDefault();
@@ -37,26 +66,22 @@
         };
 
         vm.info_is_loading = true;
-        return api.updateAccountInformation(data)
-            .then((resp) => {
-              console.log(resp);
-
-              return api.getAccountInfo()
+        return Api.updateAccountInformation(data)
+            .then(() => {
+              return Api.getAccountInfo()
             })
             .then(resp => {
               vm.$store.dispatch('setAccountData', resp.data);
+              vm.account = vm.$store.getters.accountData;
 
               return vm.$helpers.successMsg('Information saved');
             })
-            .catch((err) => {
-              console.error(err);
-
-              return vm.$helpers.errorMsg('Can not save information');
-            })
+            .catch(vm.$errors.handle)
             .then(() => {
               vm.info_is_loading = false;
             })
       },
+
       onchangeSkill: function () {
         let vm = this;
 
@@ -89,37 +114,25 @@
       addSkill: function (skill_id) {
         let vm = this;
 
-        return api.addFreelancerSkill(skill_id)
+        return Api.addFreelancerSkill(skill_id)
             .then((resp) => {
               console.log(resp);
               vm.$helpers.successMsg('Skill saved');
             })
-            .catch((err) => {
-              console.error(err);
-              vm.$helpers.errorMsg('Can not save skill');
-            })
+            .catch(vm.$errors.handle)
       },
 
       deleteSkill: function (skill_id) {
         let vm = this;
 
-        return api.deleteFreelancerSkill(skill_id)
+        return Api.deleteFreelancerSkill(skill_id)
             .then((resp) => {
               console.log(resp);
               vm.$helpers.successMsg('Skill deleted');
             })
-            .catch((err) => {
-              console.error(err);
-              vm.$helpers.errorMsg('Can not delete skill');
-            })
+            .catch(vm.$errors.handle)
       },
 
-    },
-    beforeCreate: function () {
-      //load skills
-      let vm = this;
-      vm.account = vm.$store.getters.accountData;
-      vm.current_role = vm.$helpers.getCurrentRole(vm.account);
     },
     created () {
       let vm = this;
@@ -140,7 +153,7 @@
             vm.selected_skills.push({
               value: skill.skl_id,
               label: skill.skl_title
-            })
+            });
 
             vm.last_selected_skills_ids.push(skill.skl_id);
           })
@@ -173,20 +186,23 @@
 
           <div class="list-group list-group--block">
             <div class="settings-information">
-              <!--<div class="avatar-block">-->
-                <!--<h3>Photo</h3>-->
-                <!--<div class="profile-portrait clearfix">-->
-                  <!--<div class="photo-wrap">-->
-                    <!--<a href="#"><img src="/assets/img/icons/avatar.png" alt=""></a>-->
-                  <!--</div>-->
-                  <!--<div class="photo-details">-->
-                    <!--<p>Freelancers with a friendly, professional-looking portrait are-->
-                      <!--hired 5 times more often than those without a photo.</p>-->
-                    <!--<a href="#" class="add-photo"><i class="zmdi zmdi-plus-circle"></i>Change a photo-->
-                      <!--now</a>-->
-                  <!--</div>-->
-                <!--</div>-->
-              <!--</div>-->
+              <div class="avatar-block">
+                <h3>Photo</h3>
+                <div class="profile-portrait clearfix">
+                  <div class="photo-wrap">
+                    <img v-if="account.acc_avatar" :src="api_host + '/' + account.acc_avatar" alt=""/>
+                    <img v-else src="/assets/img/icons/avatar.png" alt=""/>
+                  </div>
+                  <div class="photo-details">
+                    <p>Freelancers with a friendly, professional-looking portrait are
+                      hired 5 times more often than those without a photo.</p>
+                    <a class="add-photo"><i class="zmdi zmdi-plus-circle"></i>Change a photo
+                      now
+                      <input class="upload-link__inp" @change="onUploadAvatar" name="photo" type="file" accept=".jpg,.jpeg,.png" />
+                    </a>
+                  </div>
+                </div>
+              </div>
 
               <!--<div class="setting-block-1">-->
                 <!--<h2 class="m-b-20">Account information</h2>-->
@@ -263,9 +279,9 @@
                       <!--<i class="form-group__bar"></i>-->
                     <!--</div>-->
                     <div class="form-group form-group--float form-group--float-center form-group-weight clearfix">
-                      <input type="tel" name="phone" class="form-control" :value="account.acc_phone" id="phone">
+                      <input type="tel" name="phone" class="form-control" pattern="\d*" :value="account.acc_phone" id="phone">
                       <i class="form-group__bar"></i>
-                      <label>Phone</label>
+                      <label>Phone (format: 3801234567890)</label>
                     </div>
                   </div>
                 </div>
@@ -448,5 +464,18 @@
   }
   #steps-form textarea {
     height: 110px;
+  }
+  .add-photo {
+    position:relative;
+  }
+  .upload-link__inp {
+    top: -10px;
+    right: -40px;
+    z-index: 2;
+    position: absolute;
+    cursor: pointer;
+    opacity: 0;
+    filter: alpha(opacity=0);
+    font-size: 50px;
   }
 </style>

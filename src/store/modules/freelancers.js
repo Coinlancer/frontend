@@ -1,4 +1,4 @@
-import api from '../../api/api'
+import Api from '../../api/api'
 import * as types from '../mutation-types'
 
 // initial state
@@ -14,7 +14,7 @@ const getters = {
 // actions
 const actions = {
   getFreelancers ({ commit }) {
-    return api.getFreelancers().then(response => {
+    return Api.getFreelancers().then(response => {
       let data = response.data;
       commit(types.RECEIVE_FREELANCERS, { data })
     })

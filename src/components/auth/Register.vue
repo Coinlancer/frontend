@@ -1,16 +1,19 @@
 <script>
 
   import Api from '../../api/api';
-
   import Headerblock from '../partials/Header.vue'
-
   import keythereum from 'keythereum';
   import sjcl from 'sjcl';
 
   export default {
     beforeCreate: function () {
-      if (!!this.$store.state.session.account.acc_id) {
-        this.$router.push('/projects');
+      if (this.$store.state.session.account.acc_id) {
+
+        if (!this.$store.state.session.account.acc_is_verified) {
+          return this.$router.push('/verify');
+        }
+
+        return this.$router.push('/projects');
       }
     },
     data: function () {
@@ -86,7 +89,6 @@
           crypt_address: crypt_address
         };
 
-
         return Api.register(data)
             .then((response) => {
               vm.$store.dispatch('setAccountData', response.data.account);
@@ -94,10 +96,7 @@
               vm.$router.push('/verify');
               return vm.$helpers.successMsg('Verification code was sent on your email');
             })
-            .catch((err) => {
-              console.error(err);
-              return vm.$helpers.errorMsg('This email/login is already used');
-            })
+            .catch(vm.$errors.handle)
             .then(() => {
               vm.is_loading = false;
             })
@@ -160,7 +159,7 @@
                 </div>
 
                 <div class="form-group">
-                  <input type="text" name="login" class="form-control" placeholder="Login"
+                  <input type="text" name="login" class="form-control" placeholder="Username"
                          value=""
                   >
                   <i class="form-group__bar"></i>

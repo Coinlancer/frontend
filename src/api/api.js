@@ -1,3 +1,4 @@
+import Vue from 'vue'
 import Axios from 'axios'
 import Config from '../config'
 
@@ -10,23 +11,20 @@ axios.defaults.timeout = Config.request_ttl;
 axios.defaults.headers.post['Content-Type'] = 'application/x-www-form-urlencoded';
 
 axios.interceptors.response.use(function (response) {
-
     let api_response = response.data;
-
     if (api_response.data && api_response.data.token) {
         token = api_response.data.token;
     }
 
     return api_response;
+
 }, function (error) {
+    if (error.response && error.response.data) {
+        return Promise.reject(Vue.errors.apiError(error.response.data.error || '', error.response.data.message || ''));
+    }
 
-    // if (error.response && error.response.data) {
-    //     return Promise.reject(Vue.errors.apiError(error.response.data.error || '', error.response.data.message || ''));
-    // }
+    return Promise.reject(Vue.errors.innerError(Vue.errors.codes.NETWORK_ERROR));
 
-    // return Promise.reject(Vue.errors.innerError(Vue.errors.codes.NETWORK_ERROR));
-
-    return Promise.reject(error);
 });
 
 // Set auth header before send
@@ -49,14 +47,6 @@ axios.interceptors.request.use(function (config) {
 
     return config;
 });
-
-let handleToken = function (token) {
-    if (!token) {
-        return;
-    }
-
-    axios.defaults.headers.post['Authorization'] = 'Bearer ' + token;
-};
 
 export default {
 
@@ -140,16 +130,20 @@ export default {
         return axios.get('/projects/' + id);
     },
 
-    getClientProjects (id) {
-        return axios.get('/projects/account/' + id);
+    getClientProjects (id, filters) {
+        return axios.get('/projects/account/' + id + (filters ? '?' + querystring.stringify(filters) : ''));
     },
 
-    getFreelancerProjects () {
-        return axios.get('/freelancers/works');
+    getFreelancerProjects (filters) {
+        return axios.get('/freelancers/works' + (filters ? '?' + querystring.stringify(filters) : ''));
     },
 
-    getFreelancerSuggestions () {
-        return axios.get('/freelancers/suggestions');
+    getFreelancerSuggestions (filters) {
+        return axios.get('/freelancers/suggestions' + (filters ? '?' + querystring.stringify(filters) : ''));
+    },
+
+    getFreelancerProjectSuggestion (project_id) {
+        return axios.get('/freelancers/suggestions/project/' + project_id);
     },
 
     getCategories () {
@@ -162,6 +156,21 @@ export default {
 
     getSkills () {
         return axios.get('/skills');
+    },
+
+    uploadAvatar (attachment) {
+
+        const config = {
+            headers: {'content-type': 'multipart/form-data'}
+        };
+
+        let data = new FormData();
+
+        if (attachment) {
+            data.append('attachments[0]', attachment, attachment.name);
+        }
+
+        return axios.post('/account/avatar', data, config);
     },
 
     //attachments
@@ -207,6 +216,28 @@ export default {
         return axios.get('/projects/' + project_id + '/steps');
     },
 
+    getProjectSuggestions (project_id, filters) {
+        return axios.get('/projects/' + project_id + '/suggestions' + (filters ? '?' + querystring.stringify(filters) : ''));
+    },
+
+    //steps finances
+
+    depositStep (step_id) {
+        return axios.post('/projects/steps/' + step_id + '/deposit');
+    },
+
+    completeStep (step_id) {
+        return axios.post('/projects/steps/' + step_id + '/complete');
+    },
+
+    markAsDoneStep (step_id) {
+        return axios.post('/projects/steps/' + step_id + '/done');
+    },
+
+    refundStep (step_id) {
+        return axios.post('/projects/steps/' + step_id + '/refund');
+    },
+
     //suggestions
 
     createSuggestion (project_id, data) {
@@ -225,11 +256,15 @@ export default {
         );
     },
 
-    getFreelancers () {
-        return axios.get('/freelancers');
+    getFreelancers (filters) {
+        return axios.get('/freelancers' + (filters ? '?' + querystring.stringify(filters) : ''));
     },
 
     getFreelancerData (freelancer_id) {
         return axios.get('/freelancers/' + freelancer_id);
+    },
+
+    getClientData (client_id) {
+        return axios.get('/clients/' + client_id);
     },
 }

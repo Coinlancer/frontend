@@ -1,22 +1,29 @@
 <script>
-  import api from '../api/api'
+  import Api from '../api/api'
+  import Config from '../config/index'
   import Headerblock from './partials/Header.vue'
 
   export default {
     data: function () {
       return {
-        client: null
+        client: null,
+        api_host: Config.api_host
       }
     },
-    beforeCreate: function () {
+    created: function () {
       let vm = this;
 
-      return api.getClientData(vm.$route.params.id)
+      vm.$spinner.push();
+      return Api.getClientData(vm.$route.params.id)
           .then(resp => {
-            vm.client = resp;
+            vm.client = resp.data;
           })
-          .catch(() => {
+          .catch((err) => {
+            vm.$errors.handle(err);
             vm.$router.push('/projects')
+          })
+          .then(() => {
+            vm.$spinner.pop();
           })
     },
     components: {
@@ -32,7 +39,7 @@
     <section v-if="client" class="section">
       <div class="container">
         <header class="section__title text-left">
-          <h2>{{client.name}}</h2>
+          <h2>{{client.acc_name}} {{client.acc_surname}}</h2>
           <small>Client</small>
         </header>
 
@@ -40,20 +47,16 @@
           <div class="col-md-12">
             <div class="card profile">
               <div class="profile__img">
-                <img src="http://www.iconsfind.com/wp-content/uploads/2016/10/20161014_58006be216aa3.png" alt="">
+                <img v-if="client.acc_avatar" :src="api_host + '/' + client.acc_avatar" alt=""/>
+                <img v-else src="/assets/img/icons/avatar.png" alt=""/>
               </div>
 
               <div class="profile__info">
 
-                <div class="profile__review">
-                  <span class="rmd-rate" :data-rate-value="client.rating" data-rate-readonly="true"></span>
-                  <span>({{client.review_count}} Review)</span>
-                </div>
-
                 <ul class="rmd-contact-list">
-                  <li v-if="client.contacts && client.contacts.skype"><i class="zmdi zmdi-skype"></i>{{client.contacts.skype}}</li>
-                  <li v-if="client.contacts && client.contacts.phone"><i class="zmdi zmdi-phone"></i>{{client.contacts.phone}}</li>
-                  <li v-if="client.contacts && client.contacts.email"><i class="zmdi zmdi-email"></i>{{client.contacts.email}}</li>
+                  <li v-if="client.acc_skype"><i class="zmdi zmdi-skype"></i>{{client.acc_skype}}</li>
+                  <li v-if="client.acc_phone"><i class="zmdi zmdi-phone"></i>{{$helpers.formatPhone(client.acc_phone)}}</li>
+                  <li v-if="client.acc_email"><i class="zmdi zmdi-email"></i>{{client.acc_email}}</li>
                 </ul>
               </div>
             </div>
@@ -63,12 +66,12 @@
                 <div class="tab-nav__inner">
                   <ul>
                     <li class="active">
-                      <router-link to="#summary">Summary</router-link>
+                      <router-link to="#">Summary</router-link>
                     </li>
                     <!--<li><a href="freelancer-closed-pr-page.html">Closed projects</a></li> -->
-                    <li>
-                      <router-link to="#reviews">Reviews</router-link>
-                    </li>
+                    <!--<li>-->
+                      <!--<router-link to="#reviews">Reviews</router-link>-->
+                    <!--</li>-->
                   </ul>
                 </div>
               </div>
@@ -77,55 +80,29 @@
                 <div class="card__sub row rmd-stats">
                   <div class="col-xs-4 col-xs-offset-2">
                     <div class="rmd-stats__item mdc-bg-teal-400">
-                      <h2>{{client.projects.active}}</h2>
+                      <h2>{{client.active_projects_count}}</h2>
                       <small>Active Projects</small>
                     </div>
                   </div>
                   <div class="col-xs-4">
                     <div class="rmd-stats__item mdc-bg-purple-400">
-                      <h2>{{client.projects.completed}}</h2>
+                      <h2>0</h2>
                       <small>completed projects</small>
                     </div>
                   </div>
 
                 </div>
 
-                <div class="card__sub">
-                  <h4>About {{client.name}}</h4>
+                <div v-if="client.acc_description" class="card__sub">
+                  <h4>About {{client.acc_name}} {{client.acc_surname}}</h4>
 
-                  {{client.about}}
+                  {{client.acc_description}}
                 </div>
-
-                <!--<div class="card__sub">
-                    <h4>Specialties</h4>
-                    <p>PHP, HTML5, JavaScript, CSS, Linux System Administration</p>
-                </div>
-    -->
-
-                <!--<div class="card__sub">
-                    <h4>Contact Information</h4>
-
-                    <ul class="rmd-contact-list">
-                        <li><i class="zmdi zmdi-phone"></i>308-360-8938</li>
-                        <li><i class="zmdi zmdi-email"></i>robertbosborne@inbound.plus</li>
-                        <li><i class="zmdi zmdi-facebook"></i>robertbosborne</li>
-                        <li><i class="zmdi zmdi-twitter"></i>@robertbosborne</li>
-                        <li><i class="zmdi zmdi-pin"></i>5470 Madison Street Severna Park, MD 21146</li>
-                    </ul>
-                </div>
-                -->
               </div>
             </div>
           </div>
         </div>
       </div>
     </section>
-
-    <!-- Contact Button for mobile -->
-    <button class="btn btn--action btn--circle visible-sm visible-xs" data-rmd-action="block-open"
-            data-rmd-target="#agent-question">
-      <i class="zmdi zmdi-comment-alt-text"></i>
-    </button>
-
   </div>
 </template>
