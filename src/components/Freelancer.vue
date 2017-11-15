@@ -1,13 +1,11 @@
 <script>
   import Api from '../api/api'
-  import Config from '../config/index'
   import Headerblock from './partials/Header.vue'
 
   export default {
     data: function () {
       return {
-        freelancer: null,
-        api_host: Config.api_host
+        freelancer: null
       }
     },
     created: function () {
@@ -47,7 +45,7 @@
           <div class="col-md-12">
             <div class="card profile">
               <div class="profile__img">
-                <img v-if="freelancer.acc_avatar" :src="api_host + '/' + freelancer.acc_avatar" alt=""/>
+                <img v-if="freelancer.acc_avatar" :src="$config.api_host + '/' + freelancer.acc_avatar" alt=""/>
                 <img v-else src="/assets/img/icons/avatar.png" alt=""/>
               </div>
 
@@ -81,13 +79,13 @@
                 <div class="card__sub row rmd-stats">
                   <div class="col-xs-12 col-md-6 col-lg-4 col-lg-offset-1">
                     <div class="rmd-stats__item mdc-bg-teal-400">
-                      <h2>{{freelancer.active_projects_count}}</h2>
+                      <h2>{{freelancer.projects_counters.active_projects}}</h2>
                       <small>Active Projects</small>
                     </div>
                   </div>
                   <div class="col-xs-12 col-md-6 col-lg-4 col-lg-offset-1">
                     <div class="rmd-stats__item mdc-bg-purple-400">
-                      <h2>0</h2>
+                      <h2>{{freelancer.projects_counters.completed_projects}}</h2>
                       <small>completed projects</small>
                     </div>
                   </div>

@@ -28,13 +28,15 @@
 
         let accepted_types = ['freelancer', 'client'];
 
-        let type = e.target.type.value;
-        let name = e.target.name.value;
-        let surname = e.target.surname.value;
-        let login = e.target.login.value;
-        let password = e.target.password.value;
-        let repassword = e.target.repassword.value;
-        let email = e.target.email.value;
+        //fix for egde, that "browser" can not get value of input type radio
+        let type = $('input[name=acc_type]:checked', '#registerForm').val();
+
+        let name = e.target.acc_name.value;
+        let surname = e.target.acc_surname.value;
+        let login = e.target.acc_login.value;
+        let password = e.target.acc_password.value;
+        let repassword = e.target.acc_repassword.value;
+        let email = e.target.acc_email.value;
 
         if (typeof type == 'undefined' || accepted_types.indexOf(type) == -1) {
           return vm.$helpers.errorMsg("Select type of account");
@@ -121,13 +123,13 @@
         <div class="col-sm-4 col-sm-offset-4">
           <div class="card">
             <div class="card__body">
-              <form @submit="createAccount">
+              <form id="registerForm" @submit="createAccount">
                 <div class="profile-type clearfix">
                   <h5>Profile type:</h5>
                   <div class="form-group">
                     <div class="radio">
                       <label>
-                        <input type="radio" value="freelancer" name="type">
+                        <input type="radio" value="freelancer" name="acc_type">
                         <i class="input-helper"></i>
                         Freelancer
                       </label>
@@ -136,7 +138,7 @@
                   <div class="form-group">
                     <div class="radio">
                       <label>
-                        <input type="radio" value="client" name="type">
+                        <input type="radio" value="client" name="acc_type">
                         <i class="input-helper"></i>
                         Client
                       </label>
@@ -145,42 +147,42 @@
                 </div>
 
                 <div class="form-group">
-                  <input type="text" name="name" class="form-control" placeholder="First Name"
+                  <input type="text" name="acc_name" class="form-control" placeholder="First Name"
                         value=""
                   >
                   <i class="form-group__bar"></i>
                 </div>
 
                 <div class="form-group">
-                  <input type="text" name="surname" class="form-control" placeholder="Last Name"
+                  <input type="text" name="acc_surname" class="form-control" placeholder="Last Name"
                          value=""
                   >
                   <i class="form-group__bar"></i>
                 </div>
 
                 <div class="form-group">
-                  <input type="text" name="login" class="form-control" placeholder="Username"
+                  <input type="text" name="acc_login" class="form-control" placeholder="Username"
                          value=""
                   >
                   <i class="form-group__bar"></i>
                 </div>
 
                 <div class="form-group">
-                  <input type="password" name="password" class="form-control" placeholder="Password"
+                  <input type="password" name="acc_password" class="form-control" placeholder="Password"
                          value=""
                   >
                   <i class="form-group__bar"></i>
                 </div>
 
                 <div class="form-group">
-                  <input type="password" name="repassword" class="form-control" placeholder="Repeat password"
+                  <input type="password" name="acc_repassword" class="form-control" placeholder="Repeat password"
                          value=""
                   >
                   <i class="form-group__bar"></i>
                 </div>
 
                 <div class="form-group">
-                  <input type="email" name="email" class="form-control" placeholder="E-mail"
+                  <input type="email" name="acc_email" class="form-control" placeholder="E-mail"
                          value=""
                   >
                   <i class="form-group__bar"></i>

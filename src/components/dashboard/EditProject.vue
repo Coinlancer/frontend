@@ -13,13 +13,13 @@
 
       return {
         account: null,
+        add_step_is_loading: false,
         del_attach_is_loading: false,
         parent_categories: [],
         selected_parent_category: null,
         child_categories: [],
         selected_child_category: null,
         title: '',
-        budget: null,
         description: '',
         skills: [],
         last_selected_skills_ids: [],
@@ -80,7 +80,6 @@
             let project_data = resp.data.project;
 
             vm.title = project_data.prj_title;
-            vm.budget = project_data.prj_budget;
             vm.description = project_data.prj_description;
             vm.deadline.time = project_data.prj_deadline ? project_data.prj_deadline.split(' ')[0] : null;
 
@@ -268,17 +267,6 @@
         })
       },
 
-      calculateStepBudget: function () {
-        let vm = this;
-        let steps_budget = 0;
-
-        vm.steps.map((step) => {
-          steps_budget += parseFloat(step.budget);
-        });
-
-        return steps_budget;
-      },
-
       stepsHasErrors: function () {
         let vm = this;
         let errors = false;
@@ -302,11 +290,6 @@
         let vm = this;
 
         if (vm.stepsHasErrors()) {
-          return false;
-        }
-
-        if (vm.calculateStepBudget() >= vm.budget) {
-          vm.$helpers.errorMsg('Budget project already used by steps.');
           return false;
         }
 
@@ -346,6 +329,8 @@
           return;
         }
 
+        vm.add_step_is_loading = true;
+
         let data = {
           budget: parseFloat(vm.steps[index].budget),
           title: vm.steps[index].title,
@@ -361,6 +346,9 @@
               vm.$helpers.successMsg('Step saved');
             })
             .catch(vm.$errors.handle)
+            .then(() => {
+              vm.add_step_is_loading = false;
+            })
       },
 
       deleteStep: function (index, e) {
@@ -386,10 +374,6 @@
           return vm.$helpers.errorMsg('Enter project title');
         }
 
-        if (!vm.budget || !parseFloat(vm.budget)) {
-          return vm.$helpers.errorMsg('Enter project budget');
-        }
-
         if (!vm.description || !vm.description.length) {
           return vm.$helpers.errorMsg('Enter project description');
         }
@@ -410,7 +394,6 @@
 
         let data = {
           title: vm.title,
-          budget: parseFloat(vm.budget),
           description: vm.description,
           deadline: vm.deadline.time,
           subcategory_id: vm.selected_child_category.value,
@@ -507,11 +490,7 @@
                 <div class="card__body">
                   <form enctype="multipart/form-data" @submit="updateProject">
                     <div class="form-group">
-                      <input type="text" v-model="title" class="form-control" placeholder="Name project">
-                      <i class="form-group__bar"></i>
-                    </div>
-                    <div class="form-group">
-                      <input type="number" min="0" v-model="budget" class="form-control" placeholder="Budget">
+                      <input type="text" v-model="title" class="form-control" placeholder="Project name">
                       <i class="form-group__bar"></i>
                     </div>
                     <div class="form-group form-group--float">
@@ -551,7 +530,7 @@
                       <h3>Steps of project</h3>
                       <span></span>
 
-                      <div class="steps" v-if="budget">
+                      <div class="steps">
                         <div v-for="(step, index) in steps" class="form-group clearfix">
 
                           <div class="form-group form-group--float hidden-xs hidden-sm" style="width: 320px;">
@@ -609,19 +588,21 @@
                               ></textarea>
                             <i class="form-group__bar"></i>
                           </div>
-                          <div class="form-group form-group--float hidden-lg col-lg-12">
+                          <div class="form-group form-group--float col-lg-12">
                             <button v-if="steps[index].id && !steps[index].is_completed" @click="deleteStep(index, $event)" class="btn btn-sm btn-danger" style="margin-left: -12px;">Delete step</button>
-                            <button v-else @click="saveStep(index, $event)" class="generate-button btn btn-sm btn-success" style="margin-left: -12px;">Save step</button>
-                          </div>
-                          <div class="form-group form-group--float visible-lg col-lg-12">
-                            <button v-if="steps[index].id && !steps[index].is_completed" @click="deleteStep(index, $event)" class="btn btn-sm btn-danger" style="margin-left: -12px;">Delete step</button>
-                            <button v-else @click="saveStep(index, $event)" class="generate-button btn btn-sm btn-success" style="margin-left: -12px;">Save step</button>
+                            <button-spinner v-else
+                                            :isLoading="add_step_is_loading"
+                                            :disabled="add_step_is_loading"
+                                            class="generate-button btn btn-sm btn-success"
+                                            v-on:click.native="saveStep(index, $event)"
+                                            style="margin-left: -12px;"
+                            >
+                              <span>Save step</span>
+                            </button-spinner>
                           </div>
                         </div>
                         <button @click="addStep" class="generate-button btn btn-sm btn-primary">Add step</button>
                       </div>
-
-                      <div v-else><span class="text-warning">For adding steps set budget at first</span></div>
 
                     </div>
 

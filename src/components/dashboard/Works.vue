@@ -1,7 +1,6 @@
 <script>
 
   import Api from '../../api/api'
-  import Config from '../../config/index'
   import Headerblock from '../partials/Header.vue'
   import Sidebar from './partials/Sidebar.vue'
 
@@ -21,13 +20,13 @@
         vm.projects_page += 1;
 
         let filters = {
-          limit: Config.limits.dashboard_works,
-          offset: (vm.projects_page - 1) * Config.limits.dashboard_works
+          limit: vm.$config.limits.dashboard_works,
+          offset: (vm.projects_page - 1) * vm.$config.limits.dashboard_works
         };
 
         return Api.getFreelancerProjects(filters)
             .then((resp) => {
-                if (resp.data.length < Config.limits.dashboard_works) {
+                if (resp.data.length < vm.$config.limits.dashboard_works) {
                   vm.is_next_page_exist = false;
                 }
                 vm.projects = vm.projects.concat(resp.data);
@@ -40,13 +39,13 @@
       vm.current_role = vm.$helpers.getCurrentRole(vm.$store.getters.accountData);
 
       let filters = {
-        limit: Config.limits.dashboard_works,
-        offset: (vm.projects_page - 1) * Config.limits.dashboard_works
+        limit: vm.$config.limits.dashboard_works,
+        offset: (vm.projects_page - 1) * vm.$config.limits.dashboard_works
       };
 
       return Api.getFreelancerProjects(filters)
           .then((resp) => {
-              if (resp.data.length < Config.limits.dashboard_works) {
+              if (resp.data.length < vm.$config.limits.dashboard_works) {
                 vm.is_next_page_exist = false;
               }
               vm.projects = resp.data
@@ -84,7 +83,7 @@
                       <h3>{{project.prj_title}}</h3>
                       <p>
                           <span v-if="project.prj_budget">
-                          Fixed-Price - <b>{{project.prj_budget}} CL</b>
+                          <b>{{project.prj_budget}} CL</b>
                         </span>
                         Posted <timeago :since="new Date(project.prj_created_at).toString()"></timeago>
                       </p>
@@ -92,7 +91,9 @@
                       <!-- <h5>Lorem ipsum dolor sit amet.</h5> -->
                     </div>
                   </router-link>
-                  <button class="disabled btn btn-xs btn-success m-t-10 m-b-10 m-l-20">Active</button>
+                  <button v-if="project.prj_status == $config.project_statuses.STATUS_ACTIVE" class="disabled btn btn-xs btn-success m-t-10 m-b-10 m-l-20">Active</button>
+                  <button v-if="project.prj_status == $config.project_statuses.STATUS_COMPLETED" class="disabled btn btn-xs btn-primary m-t-10 m-b-10 m-l-20">Completed</button>
+                  <button v-if="project.prj_status == $config.project_statuses.STATUS_CANCELED" class="disabled btn btn-xs btn-warning m-t-10 m-b-10 m-l-20">Canceled</button>
                 </div>
               </div>
               <div v-if="is_next_page_exist" class="load-more m-b-30">

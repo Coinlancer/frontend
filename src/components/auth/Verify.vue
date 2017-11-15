@@ -43,7 +43,7 @@
               return vm.$store.dispatch('setAccountData', resp.data);
             })
             .then(() => {
-              vm.$router.push('/dashboard/settings');
+              vm.$router.push('/dashboard/finances');
 
               return vm.$helpers.successMsg('Account confirmed');
             })

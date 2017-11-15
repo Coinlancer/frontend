@@ -1,7 +1,6 @@
 <script>
 
   import Api from '../../api/api'
-  import Config from '../../config/index'
   import Headerblock from '../partials/Header.vue'
   import Sidebar from './partials/Sidebar.vue'
 
@@ -14,7 +13,6 @@
         info_is_loading: false,
         selected_skills: [],
         last_selected_skills_ids: [], //required for get difference between existed and added/removed skills,
-        api_host: Config.api_host
       }
     },
     methods: {
@@ -25,8 +23,8 @@
         if (e.target.files && e.target.files[0]) {
           let file = e.target.files[0];
 
-          if (file.size > Config.MAX_FILE_SIZE_IN_BYTES) {
-            vm.$helpers.errorMsg('File ' + file.name + ' is too big. Limit is ' + vm.$humanize.filesize(Config.MAX_FILE_SIZE_IN_BYTES));
+          if (file.size > vm.$config.MAX_FILE_SIZE_IN_BYTES) {
+            vm.$helpers.errorMsg('File ' + file.name + ' is too big. Limit is ' + vm.$humanize.filesize(vm.$config.MAX_FILE_SIZE_IN_BYTES));
           } else {
 
             return Api.uploadAvatar(file)
@@ -190,7 +188,7 @@
                 <h3>Photo</h3>
                 <div class="profile-portrait clearfix">
                   <div class="photo-wrap">
-                    <img v-if="account.acc_avatar" :src="api_host + '/' + account.acc_avatar" alt=""/>
+                    <img v-if="account.acc_avatar" :src="$config.api_host + '/' + account.acc_avatar" alt=""/>
                     <img v-else src="/assets/img/icons/avatar.png" alt=""/>
                   </div>
                   <div class="photo-details">

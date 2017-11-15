@@ -46,7 +46,7 @@
               localStorage.setItem('token', response.data.token);
 
               if (response.data.account.acc_is_verified) {
-                vm.$router.push('/dashboard/settings');
+                vm.$router.push('/dashboard/finances');
               } else {
                 vm.$router.push('/verify');
               }

@@ -25,9 +25,9 @@
           .catch(vm.$errors.handle)
     },
     methods: {
-      createSuggestion: function (e) {
+      createSuggestion: function (event) {
         let vm = this;
-        e.preventDefault();
+        event.preventDefault();
 
         let hours = event.target.hours ? event.target.hours.value : null;
         let message = event.target.message ? event.target.message.value : null;
@@ -55,8 +55,8 @@
             .then(() => {
               vm.sug_is_loading = false;
             })
-      },
-    },
+      }
+    }
   }
 </script>
 
@@ -64,7 +64,7 @@
     <div v-if="hired_suggestion" class="card" style="text-align: center;">
       <div class="submit-property__success">
         <i class="zmdi zmdi-check"></i>
-        <p>Project already active</p>
+        <p>Project has been started</p>
       </div>
     </div>
     <div v-else-if="is_owner" class="card" style="text-align: center;">
@@ -110,9 +110,6 @@
           <span>Submit</span>
         </button-spinner>
         <button type="reset" class="btn btn-sm btn-link">Reset</button>
-        <button class="btn btn-sm btn-link visible-sm-inline visible-xs-inline"
-                data-rmd-action="block-close" data-rmd-target="#agent-question">Cancel
-        </button>
       </div>
     </form>
 </template>

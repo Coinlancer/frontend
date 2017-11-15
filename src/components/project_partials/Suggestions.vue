@@ -1,7 +1,6 @@
 <script>
 
   import Api from '../../api/api'
-  import Config from '../../config/index'
 
   export default {
     props: ['response', 'is_owner', 'is_executor'],
@@ -17,7 +16,6 @@
         //pagination
         suggestions_page: 1,
         is_next_page_exist: true,
-        api_host: Config.api_host,
       }
     },
     methods: {
@@ -26,13 +24,13 @@
         vm.suggestions_page += 1;
 
         let filters = {
-          limit: Config.limits.suggestions,
-          offset: (vm.suggestions_page - 1) * Config.limits.suggestions
+          limit: vm.$config.limits.suggestions,
+          offset: (vm.suggestions_page - 1) * vm.$config.limits.suggestions
         };
 
         return Api.getProjectSuggestions(vm.response.project.prj_id, filters)
             .then((resp) => {
-              if (resp.data.length < Config.limits.suggestions) {
+              if (resp.data.length < vm.$config.limits.suggestions) {
                 vm.is_next_page_exist = false;
               }
               vm.suggestions = vm.suggestions.concat(resp.data);
@@ -84,13 +82,13 @@
       let vm = this;
 
       let filters = {
-        limit: Config.limits.suggestions,
-        offset: (vm.suggestions_page - 1) * Config.limits.suggestions
+        limit: vm.$config.limits.suggestions,
+        offset: (vm.suggestions_page - 1) * vm.$config.limits.suggestions
       };
 
       return Api.getProjectSuggestions(vm.response.project.prj_id, filters)
           .then((resp) => {
-              if (resp.data.length < Config.limits.suggestions) {
+              if (resp.data.length < vm.$config.limits.suggestions) {
                 vm.is_next_page_exist = false;
               }
               vm.suggestions = resp.data;
@@ -105,7 +103,7 @@
     <div v-for="freelancer in suggestions" class="listings-grid__item">
       <router-link :to="'/freelancer/' + freelancer.frl_id" class="list-group-item media">
         <div class="pull-left">
-          <img v-if="freelancer.acc_avatar" :src="api_host + '/' + freelancer.acc_avatar" alt="" class="list-group__img img-circle" width="65" height="65"/>
+          <img v-if="freelancer.acc_avatar" :src="$config.api_host + '/' + freelancer.acc_avatar" alt="" class="list-group__img img-circle" width="65" height="65"/>
           <img v-else src="/assets/img/icons/avatar.png" alt="" class="list-group__img img-circle" width="65" height="65"/>
         </div>
         <div class="media-body list-group__text">

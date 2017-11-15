@@ -1,5 +1,4 @@
 <script>
-  import Config from '../../config/index'
 
   export default {
     props: ['fullwidth'],
@@ -8,8 +7,6 @@
       let account = vm.$store.state.session.account;
 
       return {
-        homepage: Config.home_page,
-        api_host: Config.api_host,
         account: account
       }
     }
@@ -23,7 +20,7 @@
       <i class="zmdi zmdi-menu"></i>
     </a>
 
-    <router-link to="/dashboard/settings" class="header-alt__logo hidden-xs">Coinlancer Dashboard</router-link>
+    <router-link to="/dashboard/finances" class="header-alt__logo hidden-xs">Coinlancer Dashboard</router-link>
 
     <ul v-if="account && account.acc_id && account.acc_is_verified" class="header-alt__menu">
       <li>
@@ -31,12 +28,12 @@
       </li>
       <li class="header-alt__profile dropdown">
         <a href="" data-toggle="dropdown">
-          <img v-if="account.acc_avatar" :src="api_host + '/' + account.acc_avatar" alt=""/>
+          <img v-if="account.acc_avatar" :src="$config.api_host + '/' + account.acc_avatar" alt=""/>
           <img v-else src="/assets/img/icons/avatar.png" alt=""/>
         </a>
 
         <ul class="dropdown-menu pull-right">
-          <li><router-link to="/dashboard/settings">Dashboard</router-link></li>
+          <li><router-link to="/dashboard/finances">Dashboard</router-link></li>
           <li><router-link to="/logout">Logout</router-link></li>
         </ul>
       </li>
@@ -52,12 +49,12 @@
             </li>
             <li class="header-alt__profile dropdown">
               <a href="" data-toggle="dropdown">
-                <img v-if="account.acc_avatar" :src="api_host + '/' + account.acc_avatar" alt=""/>
+                <img v-if="account.acc_avatar" :src="$config.api_host + '/' + account.acc_avatar" alt=""/>
                 <img v-else src="/assets/img/icons/avatar.png" alt=""/>
               </a>
 
               <ul class="dropdown-menu pull-right">
-                <li><router-link to="/dashboard/settings">Dashboard</router-link></li>
+                <li><router-link to="/dashboard/finances">Dashboard</router-link></li>
                 <li><router-link to="/logout">Logout</router-link></li>
               </ul>
             </li>
@@ -86,7 +83,7 @@
 
     <div class="header__main">
       <div class="container">
-        <a class="logo" :href="homepage">
+        <a class="logo" :href="$config.homepage">
           <img src="/assets/img/logo2.png" alt="">
           <div class="logo__text">
             <span>Coinlancer</span>

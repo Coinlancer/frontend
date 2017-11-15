@@ -5,7 +5,6 @@
   import SuggestionForm from './project_partials/SuggestionForm.vue'
   import Suggestions from './project_partials/Suggestions.vue'
   import Api from '../api/api'
-  import Config from '../config/index'
 
   export default {
     data: function () {
@@ -23,7 +22,6 @@
         created_at: null,
         deadline: null,
         current_role: current_role,
-        api_host: Config.api_host,
         is_owner: false,
         is_executor: false,
       }
@@ -84,7 +82,12 @@
     <section class="section" v-if="project">
       <div class="container">
         <header class="section__title text-left">
-          <h2>{{project.prj_title}}</h2>
+          <h2>{{project.prj_title}}
+            <span v-if="project.prj_status == $config.project_statuses.STATUS_CREATED" class="label label-primary">Open</span>
+            <span v-if="project.prj_status == $config.project_statuses.STATUS_ACTIVE" class="label label-success">Active</span>
+            <span v-if="project.prj_status == $config.project_statuses.STATUS_COMPLETED" class="label label-primary">Completed</span>
+            <span v-if="project.prj_status == $config.project_statuses.STATUS_CANCELED" class="label label-warning">Canceled</span>
+          </h2>
           <small>{{category.cat_title}} - {{subcategory.sct_title}}</small>
         </header>
 
@@ -93,7 +96,7 @@
             <div class="card profile">
               <div class="profile__img">
                 <router-link :to="'/client/' + project.cln_id">
-                  <img v-if="project.acc_avatar" :src="api_host + '/' + project.acc_avatar" alt=""/>
+                  <img v-if="project.acc_avatar" :src="$config.api_host + '/' + project.acc_avatar" alt=""/>
                   <img v-else src="/assets/img/icons/avatar.png" alt=""/>
                 </router-link>
               </div>
@@ -167,6 +170,10 @@
         </div>
       </div>
     </section>
+    <button v-if="!is_owner" class="btn btn--action btn--circle visible-sm visible-xs" data-rmd-action="block-open"
+            data-rmd-target="#agent-question">
+      <i class="zmdi zmdi-comment-alt-text"></i>
+    </button>
   </div>
 </template>
 

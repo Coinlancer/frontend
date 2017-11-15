@@ -8,6 +8,9 @@ import myDatepicker from 'vue-datepicker'
 import store from './store'
 import Api from './api/api'
 
+import Config from './config/index'
+Vue.prototype.$config = Config
+
 //plugins
 import Errors from './plugins/errors'
 import Helpers from './plugins/helpers'

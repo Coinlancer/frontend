@@ -1,13 +1,11 @@
 <script>
   import Api from '../api/api'
-  import Config from '../config/index'
   import Headerblock from './partials/Header.vue'
 
   export default {
     data: function () {
       return {
-        client: null,
-        api_host: Config.api_host
+        client: null
       }
     },
     created: function () {
@@ -47,7 +45,7 @@
           <div class="col-md-12">
             <div class="card profile">
               <div class="profile__img">
-                <img v-if="client.acc_avatar" :src="api_host + '/' + client.acc_avatar" alt=""/>
+                <img v-if="client.acc_avatar" :src="$config.api_host + '/' + client.acc_avatar" alt=""/>
                 <img v-else src="/assets/img/icons/avatar.png" alt=""/>
               </div>
 
@@ -80,22 +78,20 @@
                 <div class="card__sub row rmd-stats">
                   <div class="col-xs-4 col-xs-offset-2">
                     <div class="rmd-stats__item mdc-bg-teal-400">
-                      <h2>{{client.active_projects_count}}</h2>
+                      <h2>{{client.projects_counters.active_projects}}</h2>
                       <small>Active Projects</small>
                     </div>
                   </div>
                   <div class="col-xs-4">
                     <div class="rmd-stats__item mdc-bg-purple-400">
-                      <h2>0</h2>
+                      <h2>{{client.projects_counters.completed_projects}}</h2>
                       <small>completed projects</small>
                     </div>
                   </div>
-
                 </div>
 
                 <div v-if="client.acc_description" class="card__sub">
                   <h4>About {{client.acc_name}} {{client.acc_surname}}</h4>
-
                   {{client.acc_description}}
                 </div>
               </div>

@@ -196,29 +196,6 @@ const Helpers = {
                     }), $(".ie9")[0] && $("input, textarea").placeholder()
                 });
 
-                // 1. Price Range
-
-                if ($('#property-price-range')[0]) {
-                    var propertyPriceRange = document.getElementById('property-price-range');
-                    var propertyPriceRangeValues = [
-                        document.getElementById('property-price-upper'),
-                        document.getElementById('property-price-lower')
-                    ]
-
-                    noUiSlider.create(propertyPriceRange, {
-                        start: [12000, 70000],
-                        connect: true,
-                        range: {
-                            'min': 12000,
-                            'max': 70000
-                        }
-                    });
-
-                    propertyPriceRange.noUiSlider.on('update', function (values, handle) {
-                        propertyPriceRangeValues[handle].innerHTML = values[handle];
-                    });
-                }
-
 // 2. Property Area Size
 
                 if ($('#property-area-range')[0]) {

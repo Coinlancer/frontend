@@ -1,15 +1,14 @@
 <script>
   import { mapGetters } from 'vuex'
   import Headerblock from './partials/Header.vue'
-  import Config from '../config/index'
   import Api from '../api/api'
 
   export default {
     data: function () {
+      let vm = this;
       return {
         freelancers: [],
         skills: [],
-        api_host: Config.api_host,
         //filter
         is_next_page_exist: true,
         selected_skills: [],
@@ -17,11 +16,11 @@
         cancel_filter_is_loading: false,
         default_filter: {
           page: 1,
-          limit: Config.limits.freelancers
+          limit: vm.$config.limits.freelancers
         },
         filter: {
           page: 1,
-          limit: Config.limits.freelancers
+          limit: vm.$config.limits.freelancers
         }
       }
     },
@@ -56,7 +55,7 @@
             .then(response => {
               vm.freelancers = response.data;
 
-              if (response.data.length != Config.limits.freelancers) {
+              if (response.data.length != vm.$config.limits.freelancers) {
                 vm.is_next_page_exist = false;
               }
             })
@@ -72,7 +71,7 @@
             .then(response => {
               vm.freelancers = vm.freelancers.concat(response.data);
 
-              if (response.data.length != Config.limits.freelancers) {
+              if (response.data.length != vm.$config.limits.freelancers) {
                 vm.is_next_page_exist = false;
               }
             })
@@ -180,7 +179,7 @@
               <!--</div>-->
             </div>
 
-            <div class="card__footer text-center">
+            <div class="card__footer">
               <button-spinner
                   :isLoading="filter_is_loading"
                   :disabled="filter_is_loading"
@@ -194,7 +193,7 @@
               <button-spinner
                   :isLoading="cancel_filter_is_loading"
                   :disabled="cancel_filter_is_loading"
-                  class="btn btn-sm btn-warning"
+                  class="btn btn-sm btn-link"
                   v-on:click.native="dropFilters($event)"
               >
                 <span>Clear</span>
@@ -208,7 +207,7 @@
               <div class="listings-grid__item">
                 <router-link :to="'/freelancer/' + freelancer.frl_id">
                   <div class="listings-grid__main">
-                    <img v-if="freelancer.acc_avatar" :src="api_host + '/' + freelancer.acc_avatar" alt=""/>
+                    <img v-if="freelancer.acc_avatar" :src="$config.api_host + '/' + freelancer.acc_avatar" alt=""/>
                     <img v-else src="/assets/img/icons/avatar.png" alt=""/>
                   </div>
                   <div class="listings-grid__body">

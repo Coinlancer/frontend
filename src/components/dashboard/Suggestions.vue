@@ -1,7 +1,6 @@
 <script>
 
   import Api from '../../api/api'
-  import Config from '../../config/index'
   import Headerblock from '../partials/Header.vue'
   import Sidebar from './partials/Sidebar.vue'
 
@@ -23,13 +22,13 @@
         vm.suggestions_page += 1;
 
         let filters = {
-          limit: Config.limits.dashboard_suggestions,
-          offset: (vm.suggestions_page - 1) * Config.limits.dashboard_suggestions
+          limit: vm.$config.limits.dashboard_suggestions,
+          offset: (vm.suggestions_page - 1) * vm.$config.limits.dashboard_suggestions
         };
 
         return Api.getFreelancerSuggestions(filters)
             .then((resp) => {
-              if (resp.data.length < Config.limits.dashboard_suggestions) {
+              if (resp.data.length < vm.$config.limits.dashboard_suggestions) {
                 vm.is_next_page_exist = false;
               }
               vm.suggestions = vm.suggestions.concat(resp.data);
@@ -63,13 +62,13 @@
       vm.current_role = vm.$helpers.getCurrentRole(vm.$store.getters.accountData);
 
       let filters = {
-        limit: Config.limits.dashboard_suggestions,
-        offset: (vm.suggestions_page - 1) * Config.limits.suggestions
+        limit: vm.$config.limits.dashboard_suggestions,
+        offset: (vm.suggestions_page - 1) * vm.$config.limits.suggestions
       };
 
       Api.getFreelancerSuggestions(filters)
           .then((resp) => {
-            if (resp.data.length < Config.limits.dashboard_suggestions) {
+            if (resp.data.length < vm.$config.limits.dashboard_suggestions) {
               vm.is_next_page_exist = false;
             }
             vm.suggestions = resp.data
@@ -105,10 +104,15 @@
                   <div class="media-body">
                     <router-link :to="'/project/' + suggestion.prj_id" class="media">
                       <div class="listings-grid__body">
-                        <h3>{{suggestion.prj_title}}</h3>
+                        <h3>{{suggestion.prj_title}}
+                          <span v-if="suggestion.prj_status == $config.project_statuses.STATUS_CREATED" class="label label-primary">Open</span>
+                          <span v-if="suggestion.prj_status == $config.project_statuses.STATUS_ACTIVE" class="label label-success">Active</span>
+                          <span v-if="suggestion.prj_status == $config.project_statuses.STATUS_COMPLETED" class="label label-primary">Completed</span>
+                          <span v-if="suggestion.prj_status == $config.project_statuses.STATUS_CANCELED" class="label label-warning">Canceled</span>
+                        </h3>
                         <p>
                             <span v-if="suggestion.prj_budget">
-                            Fixed-Price - <b>{{suggestion.prj_budget}} CL</b>
+                            <b>{{suggestion.prj_budget}} CL</b>
                           </span>
                           Posted <timeago :since="new Date(suggestion.prj_created_at).toString()"></timeago>
                         </p>
@@ -122,7 +126,7 @@
                   <h6 class="sugg-label">Your suggestion:</h6>
                     <div class="media-body">
                       <div class="listings-grid__body">
-                        <small>{{suggestion.prf_hours}} hours | {{suggestion.prf_price}} CL</small>
+                        <small>{{suggestion.prf_hours}} hours</small>
                         <h5>{{suggestion.prf_message}}</h5>
                       </div>
                     </div>
@@ -135,7 +139,7 @@
                     >
                       <span>Delete</span>
                     </button-spinner>
-                    <button v-else class="disabled btn btn-xs btn-success m-t-10 m-b-10">In work</button>
+                    <button v-else class="disabled btn btn-xs btn-success m-t-10 m-b-10">Hired</button>
                   </div>
                 </div>
               </div>

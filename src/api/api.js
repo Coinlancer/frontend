@@ -122,6 +122,10 @@ export default {
         );
     },
 
+    cancelProject (project_id) {
+        return axios.post('/projects/' + project_id + '/cancel');
+    },
+
     getProjects (filters) {
         return axios.get('/projects' + (filters ? '?' + querystring.stringify(filters) : ''));
     },

@@ -1,7 +1,6 @@
 <script>
   import { mapGetters } from 'vuex'
   import Headerblock from './partials/Header.vue'
-  import Config from '../config/index'
   import Api from '../api/api'
 
   export default {
@@ -20,13 +19,39 @@
         filter_is_loading: false,
         cancel_filter_is_loading: false,
 
+        selected_deadline_filter: null,
+        deadline_filter: [
+          {
+            value: 1,
+            label: 'Less than week'
+          },
+          {
+            value: 2,
+            label: 'Less than month'
+          },
+          {
+            value: 3,
+            label: 'From 1 to 3 month'
+          },
+          {
+            value: 4,
+            label: 'More than 3 month'
+          },
+        ],
+
+        slider: null,
+        min_budget: 0,
+        max_budget: 0,
+        min_budget_selected: 0,
+        max_budget_selected: 0,
+
         default_filter: {
           page: 1,
-          limit: Config.limits.projects
+          limit: vm.$config.limits.projects
         },
         filter: {
           page: 1,
-          limit: Config.limits.projects
+          limit: vm.$config.limits.projects
         }
       }
     },
@@ -57,6 +82,32 @@
           prepared_filter.content = vm.has_content;
         }
 
+        if (vm.min_budget_selected) {
+          prepared_filter.min_budget = vm.min_budget_selected;
+        }
+
+        if (vm.max_budget_selected) {
+          prepared_filter.max_budget = vm.max_budget_selected;
+        }
+
+        if (vm.selected_deadline_filter && vm.selected_deadline_filter.value) {
+          switch (vm.selected_deadline_filter.value) {
+            case 1:
+              prepared_filter.deadline_to = 7;
+              break;
+            case 2:
+              prepared_filter.deadline_to = 30;
+              break;
+            case 3:
+              prepared_filter.deadline_from = 30;
+              prepared_filter.deadline_to = 90;
+              break;
+            case 4:
+              prepared_filter.deadline_from = 90;
+              break;
+          }
+        }
+
         return prepared_filter;
       },
 
@@ -69,9 +120,11 @@
             .then(response => {
               vm.projects = response.data.projects;
 
-              if (response.data.projects.length != Config.limits.projects) {
+              if (response.data.projects.length != vm.$config.limits.projects) {
                 vm.is_next_page_exist = false;
               }
+
+              return response;
             })
             .catch(vm.$errors.handle)
       },
@@ -85,7 +138,7 @@
             .then(response => {
               vm.projects = vm.projects.concat(response.data.projects);
 
-              if (response.data.projects.length != Config.limits.projects) {
+              if (response.data.projects.length != vm.$config.limits.projects) {
                 vm.is_next_page_exist = false;
               }
             })
@@ -113,7 +166,12 @@
         vm.has_content = '';
         vm.selected_skills = [];
         vm.selected_category = null;
+        vm.selected_deadline_filter = null;
         vm.is_next_page_exist = true;
+
+        if (vm.slider) {
+          vm.slider.noUiSlider.set([vm.min_budget, vm.max_budget]);
+        }
         vm.filter.page = 1;
 
         return vm.loadDataWithFilters().then(() => {vm.cancel_filter_is_loading = false});
@@ -154,10 +212,52 @@
             value: cat.sct_id,
             label: cat.sct_title
           })
-        })
+        });
 
         vm.loadDataWithFilters()
-            .then(() => {
+            .then((response) => {
+
+              if (response.data.min_budget) {
+                vm.min_budget = response.data.min_budget;
+                vm.min_budget_selected = response.data.min_budget;
+              }
+
+              if (response.data.max_budget) {
+                vm.max_budget = response.data.max_budget;
+                vm.max_budget_selected = response.data.max_budget;
+              }
+
+              if (vm. max_budget && vm.min_budget) {
+                var propertyPriceRange = document.getElementById('property-price-range');
+
+                var propertyPriceRangeValues = [
+                  document.getElementById('property-price-upper'),
+                  document.getElementById('property-price-lower')
+                ];
+
+                noUiSlider.create(propertyPriceRange, {
+                  start: [vm.min_budget, vm.max_budget],
+                  connect: true,
+                  range: {
+                    'min': vm.min_budget,
+                    'max': vm.max_budget
+                  }
+                });
+
+                propertyPriceRange.noUiSlider.on('update', function (values, handle) {
+                  if (handle == 0) {
+                    vm.min_budget_selected = values[handle]
+                  } else if (handle == 1) {
+                    vm.max_budget_selected = values[handle]
+                  }
+                  propertyPriceRangeValues[handle].innerHTML = values[handle];
+                });
+
+                vm.slider = propertyPriceRange;
+              } else {
+                $('#filter').hide();
+              }
+
               vm.$spinner.pop();
             })
       });
@@ -190,7 +290,7 @@
               <div class="card__body m-t-20">
                 <div class="form-group form-group--float">
                   <input type="text" v-model="has_content" class="form-control" value="">
-                  <label class="fg-float">Content</label>
+                  <label class="fg-float">Find the job</label>
                   <i class="form-group__bar"></i>
                 </div>
 
@@ -218,18 +318,24 @@
                   <v-select v-model="selected_category" :options="categories"></v-select>
                 </div>
 
-                <!--<div class="form-group form-group&#45;&#45;range">-->
-                  <!--<label>Price Range</label>-->
-                  <!--<div class="input-slider-values clearfix">-->
-                    <!--<div class="pull-left"><span id="property-price-upper"></span><span> CL</span></div>-->
-                    <!--<div class="pull-right"><span id="property-price-lower"></span></span><span> CL</span></div>-->
-                  <!--</div>-->
-                  <!--<div id="property-price-range"></div>-->
-                <!--</div>-->
+                <div class="form-group">
+                  <label>Project length</label>
+
+                  <v-select v-model="selected_deadline_filter" :options="deadline_filter"></v-select>
+                </div>
+
+                <div class="form-group form-group--range" id="filter">
+                  <label>Price Range</label>
+                  <div class="input-slider-values clearfix">
+                    <div class="pull-left"><span id="property-price-upper"></span><span> CL</span></div>
+                    <div class="pull-right"><span id="property-price-lower"></span></span><span> CL</span></div>
+                  </div>
+                  <div id="property-price-range"></div>
+                </div>
 
               </div>
 
-              <div class="card__footer text-center">
+              <div class="card__footer">
                 <button-spinner
                     :isLoading="filter_is_loading"
                     :disabled="filter_is_loading"
@@ -243,7 +349,7 @@
                 <button-spinner
                     :isLoading="cancel_filter_is_loading"
                     :disabled="cancel_filter_is_loading"
-                    class="btn btn-sm btn-warning"
+                    class="btn btn-sm btn-link"
                     v-on:click.native="dropFilters($event)"
                 >
                   <span>Clear</span>
@@ -260,7 +366,7 @@
                       <small>{{project.prj_title}}</small>
                       <p>
                         <span v-if="project.prj_budget">
-                          Fixed-Price - <b>{{project.prj_budget}} CL</b>
+                          <b>{{project.prj_budget}} CL</b>
                         </span>
                          Posted <timeago :since="new Date(project.prj_created_at).toString()"></timeago></p>
                       <h5>{{project.prj_description}}</h5>
@@ -282,8 +388,8 @@
             </div>
           </div>
 
-          <div v-else>
-            <h2>No projects are created yet</h2>
+          <div class="text-center" v-else>
+            <h2>No projects</h2>
           </div>
 
         </div>

@@ -1,7 +1,6 @@
 <script>
 
   import Api from '../../api/api'
-  import Config from '../../config/index'
 
   export default {
     props: ['response', 'is_owner', 'is_executor'],
@@ -15,8 +14,7 @@
         account: account,
         current_role: current_role,
         hired_suggestion: vm.response.hired_suggestion,
-        statuses: Config.step_statuses,
-        steps: vm.response.steps,
+        steps: vm.response.steps
       }
     },
     methods: {
@@ -90,9 +88,18 @@
           return false;
         }
 
-        let allowance = Config.web3.fromWei(Config.contract.allowance(vm.account.acc_crypt_address, Config.escrow_contract_address).toNumber());
+        let allowance = vm.$config.web3.fromWei(vm.$config.contract_cl.allowance(vm.account.acc_crypt_address, vm.$config.escrow_contract_address).toNumber());
+        let current_fee = vm.$config.contract_escrow.getFee().toNumber();
 
-        let budget_with_commission = parseFloat(step.stp_budget) * 1.03;
+        if (!current_fee) {
+          return vm.$helpers.errorMsg('Can not get fee value from escrow contract. Contact support.');
+        }
+
+        if (current_fee <= 0 || current_fee > 100) {
+          return vm.$helpers.errorMsg('Invalid fee size. Contact support.');
+        }
+
+        let budget_with_commission = parseFloat(step.stp_budget) * (1 + (current_fee / 100));
 
         if (parseFloat(allowance) < budget_with_commission) {
             return vm.$helpers.errorMsg('Not enough allowance for deposit step');
@@ -154,6 +161,34 @@
               dialog_context.close();
             });
       },
+
+      refundStep: function () {
+        let vm = this;
+        let dialog_context = null;
+
+        vm.$dialog.confirm("Confirm refund process. It will cancel project and refund all uncompleted operations.")
+            .then((dialog) => {
+              dialog_context = dialog;
+
+              return Api.cancelProject(vm.$route.params.id);
+            })
+            .then(() => {
+              return Api.getProjectSteps(vm.$route.params.id);
+            })
+            .then((resp) => {
+              vm.steps = resp.data;
+              return vm.$helpers.successMsg('Project canceled');
+            })
+            .catch((err) => {
+              if (!err) {
+                return;
+              }
+              vm.$errors.handle(err);
+            })
+            .then(() => {
+              dialog_context.close();
+            });
+      },
     },
   }
 </script>
@@ -165,17 +200,20 @@
       <ul>
         <li v-for="(step, index) in steps">
           <div class="list-group list-group--block tasks-lists">
-            <div v-if="step.stp_status == statuses.STATUS_WAIT_DEPOSIT_CONFIRMATION" class="checked-icon">
+            <div v-if="step.stp_status == $config.step_statuses.STATUS_WAIT_DEPOSIT_CONFIRMATION" class="checked-icon">
               <img title="Wait for transaction confirmations" src="/assets/img/icons/wait_for_confirmation.gif" alt="">
             </div>
-            <div v-if="step.stp_status == statuses.STATUS_DEPOSITED" class="checked-icon">
+            <div v-if="step.stp_status == $config.step_statuses.STATUS_DEPOSITED" class="checked-icon">
               <img title="Your deposit successful confirmed" src="/assets/img/icons/deposit.png" alt="">
             </div>
-            <div v-if="step.stp_status == statuses.STATUS_MARK_AS_DONE" class="checked-icon">
+            <div v-if="step.stp_status == $config.step_statuses.STATUS_MARK_AS_DONE" class="checked-icon">
               <img title="Wait for complete from you" src="/assets/img/icons/mark_as_done.png" alt="">
             </div>
-            <div v-else-if="step.stp_status == statuses.STATUS_COMPLETED" class="checked-icon">
+            <div v-else-if="step.stp_status == $config.step_statuses.STATUS_COMPLETED" class="checked-icon">
               <img title="Step completed" src="/assets/img/icons/complete.png" alt="">
+            </div>
+            <div v-else-if="step.stp_status == $config.step_statuses.STATUS_REFUNDED" class="checked-icon">
+              <img title="Step completed" src="/assets/img/icons/refund.png" alt="">
             </div>
             <div class="list-group-item">
               <div class="checkbox checkbox--char">
@@ -195,9 +233,10 @@
                       class="zmdi zmdi-more-vert"></i></a>
 
                   <ul class="dropdown-menu pull-right">
-                    <li v-bind:class="{disabledLi: !(index == 0 || steps[index - 1].stp_status == statuses.STATUS_COMPLETED) || !hired_suggestion || step.stp_status != statuses.STATUS_CREATED}"><a href="#" @click="depositStep(step, $event)">Deposit</a></li>
-                    <li v-bind:class="{disabledLi: step.stp_status != statuses.STATUS_MARK_AS_DONE}"><a href="#" @click="completeStep(step.stp_id, $event)">Complete</a></li>
-                    <li v-bind:class="{disabledLi: hired_suggestion || step.stp_status != statuses.STATUS_CREATED}"><a href="#" @click="deleteStep(step.stp_id, $event)">Delete</a></li>
+                    <li v-bind:class="{disabledLi: !(index == 0 || steps[index - 1].stp_status == $config.step_statuses.STATUS_COMPLETED) || !hired_suggestion || step.stp_status != $config.step_statuses.STATUS_CREATED}"><a href="#" @click="depositStep(step, $event)">Deposit</a></li>
+                    <li v-bind:class="{disabledLi: step.stp_status != $config.step_statuses.STATUS_MARK_AS_DONE}"><a href="#" @click="completeStep(step.stp_id, $event)">Complete</a></li>
+                    <li v-bind:class="{disabledLi: hired_suggestion || step.stp_status != $config.step_statuses.STATUS_CREATED}"><a href="#" @click="deleteStep(step.stp_id, $event)">Delete</a></li>
+                    <li v-bind:class="{disabledLi: step.stp_status != $config.step_statuses.STATUS_DEPOSITED && step.stp_status != $config.step_statuses.STATUS_MARK_AS_DONE}"><a href="#" @click="refundStep">Refund</a></li>
                   </ul>
                 </div>
               </div>
@@ -208,7 +247,7 @@
                       class="zmdi zmdi-more-vert"></i></a>
 
                   <ul class="dropdown-menu pull-right">
-                    <li v-bind:class="{disabledLi: step.stp_status != statuses.STATUS_DEPOSITED}"><a href="#" @click="markAsDoneStep(step.stp_id, $event)">Mark as done</a></li>
+                    <li v-bind:class="{disabledLi: step.stp_status != $config.step_statuses.STATUS_DEPOSITED}"><a href="#" @click="markAsDoneStep(step.stp_id, $event)">Mark as done</a></li>
                   </ul>
                 </div>
               </div>

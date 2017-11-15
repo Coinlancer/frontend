@@ -1,7 +1,8 @@
 import Web3 from 'web3'
-import abi from './abi'
+import abi_cl from './abi_cl'
+import abi_escrow from './abi_escrow'
 
-let web3 = new Web3(new Web3.providers.HttpProvider('http://5.189.189.240:8545'));
+let web3 = new Web3(new Web3.providers.HttpProvider(process.env.NODE_HOST));
 
 var conf = {
     request_ttl: 30000,
@@ -28,16 +29,27 @@ let step_statuses = {
     STATUS_REFUNDED: 5
 };
 
+let project_statuses = {
+    //constants
+    STATUS_CREATED: 0,
+    STATUS_ACTIVE: 1,
+    STATUS_COMPLETED: 2,
+    STATUS_CANCELED: 3
+};
+
 conf.step_statuses = step_statuses;
+conf.project_statuses = project_statuses;
 
 //contract
 conf.cl_contract_address = process.env.CONTRACT_ADDRESS_CL;
 conf.escrow_contract_address = process.env.CONTRACT_ADDRESS_ESCROW;
 conf.chainId = '0x0' + process.env.chainId;
 
-let contract = web3.eth.contract(abi).at(conf.cl_contract_address);
+let contract_cl = web3.eth.contract(abi_cl).at(conf.cl_contract_address);
+let contract_escrow = web3.eth.contract(abi_escrow).at(conf.escrow_contract_address);
 
 conf.web3 = web3;
-conf.contract = contract;
+conf.contract_cl = contract_cl;
+conf.contract_escrow = contract_escrow;
 
 export default conf;

@@ -148,11 +148,12 @@
               <form @submit="updateAccountPassword">
                 <div class="password-block clearfix">
                   <h4>Change password</h4>
-                  <div class="form-group form-group--float form-group--float-center form-group-weight clearfix">
+                  <div class="form-group form-group--float form-group-left form-group--float-center form-group-weight clearfix">
                     <input type="password" class="form-control text-center" name="password">
                     <i class="form-group__bar"></i>
                     <label>Current password</label>
                   </div>
+                  <div class="clearfix"></div>
                   <div class="form-group form-group--float form-group--float-center  form-group-weight form-group-left clearfix">
                     <input type="password" class="form-control text-center" name="new_password">
                     <i class="form-group__bar"></i>
