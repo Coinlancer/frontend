@@ -126,7 +126,7 @@
         let amount = e.target.amount.value;
         let password = e.target.password.value;
 
-        if (!amount || amount < min_allow) {
+        if (!amount || amount < vm.min_allow) {
           vm.allow_is_loading = false;
           return vm.$helpers.errorMsg('Bad amount');
         }
